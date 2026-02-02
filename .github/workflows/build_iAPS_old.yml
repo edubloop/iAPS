@@ -103,14 +103,6 @@ jobs:
 
       - name: Select Xcode version
         run: "sudo xcode-select --switch /Applications/Xcode_26.0.1.app/Contents/Developer"
-      
-      - name: Ensure iOS platform is installed 
-        run: | 
-          "sudo xcode-select --switch /Applications/Xcode_26.0.1.app/Contents/Developer"
-          echo "DEVELOPER_DIR: $(xcode-select -p)" 
-          xcodebuild -version 
-          sudo xcodebuild -runFirstLaunch 
-          sudo xcodebuild -downloadPlatform iOS
         
       - name: Checkout Repo for syncing
         if: |
