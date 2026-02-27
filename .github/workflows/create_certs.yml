@@ -36,7 +36,7 @@ jobs:
 
       - name: Set special variables
         run: |
-          if [ ! -z ${{ vars.APP_IDENTIFIER }}  ]; then
+          if [ -n "${{ vars.APP_IDENTIFIER }}" ]; then
             echo "APP_IDENTIFIER=${{ vars.APP_IDENTIFIER }}" >> $GITHUB_ENV
           fi
 
@@ -75,7 +75,9 @@ jobs:
         id: set_output
         run: |
           CERT_STATUS_FILE="${{ github.workspace }}/fastlane/new_certificate_needed.txt"
+          CERT_STATUS=false
           ENABLE_NUKE_CERTS=${{ vars.ENABLE_NUKE_CERTS }}
+          FORCE_NUKE_CERTS=${{ vars.FORCE_NUKE_CERTS }}
           
           if [ -f "$CERT_STATUS_FILE" ]; then
             CERT_STATUS=$(cat "$CERT_STATUS_FILE" | tr -d '\n' | tr -d '\r') # Read file content and strip newlines
@@ -98,7 +100,7 @@ jobs:
           fi
 
           # Check if vars.FORCE_NUKE_CERTS is not set to true
-          if [ vars.FORCE_NUKE_CERTS = "true" ]; then
+          if [ "$FORCE_NUKE_CERTS" = "true" ]; then
             echo "::warning::‼️ Nuking of certificates was forced because the repository variable FORCE_NUKE_CERTS is set to 'true'."
           fi
 
@@ -117,7 +119,7 @@ jobs:
 
         - name: Set special variables
           run: |
-            if [ ! -z ${{ vars.APP_IDENTIFIER }}  ]; then
+            if [ -n "${{ vars.APP_IDENTIFIER }}" ]; then
               echo "APP_IDENTIFIER=${{ vars.APP_IDENTIFIER }}" >> $GITHUB_ENV
             fi
 
