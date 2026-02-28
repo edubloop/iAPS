@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: add-identifiers-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:

@@ -4,7 +4,7 @@ run-name: Create Certificates (${{ github.ref_name }})
 on: [workflow_call, workflow_dispatch]
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: create-certs-${{ github.ref }}
   cancel-in-progress: false
 
 env:

@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: sync-upstream-${{ github.ref }}
   cancel-in-progress: false
 
 permissions:
