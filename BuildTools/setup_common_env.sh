@@ -7,7 +7,14 @@ set -euo pipefail
 BUNDLER_VERSION_FALLBACK="2.7.2"
 if [ -f "Gemfile.lock" ] && grep -q "BUNDLED WITH" Gemfile.lock; then
   BUNDLER_VERSION=$(grep -A1 "BUNDLED WITH" Gemfile.lock | tail -1 | tr -d ' \r')
-  echo "Detected Bundler ${BUNDLER_VERSION} from Gemfile.lock"
+  # Guard: verify the parsed value looks like a semver (e.g. 2.7.2).
+  # Catches empty string, whitespace, or garbage if the format ever changes.
+  if ! [[ "${BUNDLER_VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    echo "Warning: parsed bundler version '${BUNDLER_VERSION}' is not valid semver; using fallback ${BUNDLER_VERSION_FALLBACK}"
+    BUNDLER_VERSION="${BUNDLER_VERSION_FALLBACK}"
+  else
+    echo "Detected Bundler ${BUNDLER_VERSION} from Gemfile.lock"
+  fi
 else
   BUNDLER_VERSION="${BUNDLER_VERSION_FALLBACK}"
   echo "No Gemfile.lock found; using pinned Bundler ${BUNDLER_VERSION}"
