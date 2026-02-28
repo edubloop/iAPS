@@ -3,6 +3,10 @@ run-name: Create Certificates (${{ github.ref_name }})
 
 on: [workflow_call, workflow_dispatch]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 env:
   TEAMID: ${{ secrets.TEAMID }}
   GH_PAT: ${{ secrets.GH_PAT }}
