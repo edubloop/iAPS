@@ -2,42 +2,51 @@
 name: 5. Sync Upstream
 run-name: Sync Upstream (${{ github.ref_name }})
 
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
 env:
   UPSTREAM_URL: "https://github.com/Artificial-Pancreas/iAPS.git"
-  WORKFLOW_TOKEN: ${{ secrets.GH_PAT }}
-  # Always sync upstream/main → this repo's main.
-  # Using ref_name here would break manual dispatch from non-main branches
-  # (upstream has no dev-ci-hardening branch).
-  UPSTREAM_BRANCH: "main"
-  DOWNSTREAM_BRANCH: "main"
-  # Optional fetch arguments
-  FETCH_ARGS: ""
-  # Optional merge arguments
-  MERGE_ARGS: ""
-  # Optional push arguments
-  PUSH_ARGS: ""
-  # Optional toggle to spawn time logs (keeps action active)
-  SPAWN_LOGS: "false" # "true" or "false"
-
-on: 
-
-  schedule:
-    - cron: '0 3 * * *'             # scheduled to run daily
-
-  workflow_dispatch:                # trigger manually
+  TARGET_BRANCH: "main"
 
 jobs:
-  build:
+  sync:
+    name: Sync main from upstream
     runs-on: ubuntu-latest
     steps:
-      - name: GitHub Sync to Upstream Repository
-        uses: Artificial-Pancreas/sync-upstream-repo@master
+      - name: Checkout target branch
+        uses: actions/checkout@v4
         with:
-          upstream_repo: ${{ env.UPSTREAM_URL }}
-          upstream_branch: ${{ env.UPSTREAM_BRANCH }}
-          downstream_branch: ${{ env.DOWNSTREAM_BRANCH }}
-          token: ${{ env.WORKFLOW_TOKEN }}
-          fetch_args: ${{ env.FETCH_ARGS }}
-          merge_args: ${{ env.MERGE_ARGS }}
-          push_args: ${{ env.PUSH_ARGS }}
-          spawn_logs: ${{ env.SPAWN_LOGS }}
+          token: ${{ secrets.GH_PAT }}
+          ref: ${{ env.TARGET_BRANCH }}
+          fetch-depth: 0
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch upstream branch
+        run: |
+          git remote add upstream "${{ env.UPSTREAM_URL }}"
+          git fetch upstream "${{ env.TARGET_BRANCH }}"
+
+      - name: Fast-forward merge upstream
+        run: git merge --ff-only "upstream/${{ env.TARGET_BRANCH }}"
+
+      - name: Push synced branch
+        run: |
+          if [ "$(git rev-parse HEAD)" = "$(git rev-parse origin/${{ env.TARGET_BRANCH }})" ]; then
+            echo "No updates to push"
+            exit 0
+          fi
+          git push origin "HEAD:${{ env.TARGET_BRANCH }}"
