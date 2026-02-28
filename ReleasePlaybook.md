@@ -1,72 +1,74 @@
 # iAPS Release Playbook (Forked)
 
-This playbook details the process for building and distributing releases to the main TestFlight track and a separate development track in your personal fork (`edubloop/iAPS`).
+This playbook defines a stable release path for current users and an isolated development path for testing new changes safely.
 
----
+## 1. Operating Model
 
-## 1. Repository Structure
-
-| Repository | Purpose | Default Branch | Primary Action Branch |
+| Repository | Role | Default Branch | TestFlight Target |
 | :--- | :--- | :--- | :--- |
-| `edubloop/iAPS` (`origin`) | **Stable Track** for existing users. Synced to upstream. | `main` | `main` (or merge from feature branches) |
-| `edubloop/iAPS_dev` (`devrepo`) | **Development Track** for new features/testing before stable. | `dev-ci-hardening` | `dev-ci-hardening` |
-| `edubloop/Match-Secrets` | Stores provisioning profiles/certificates for CI signing. | `master` | `master` |
+| `edubloop/iAPS` | Stable production fork synced to upstream | `main` | Main app (`...FreeAPS`) |
+| `edubloop/iAPS_dev` | Integration and testing fork | `dev-ci-hardening` | Dev app (`...FreeAPS.dev`) |
+| `edubloop/Match-Secrets` | Shared signing assets repository | `master` | N/A |
 
----
+## 2. Promotion Rule
 
-## 2. Main Track Release (`edubloop/iAPS`)
+- Never release to stable before dev is green.
+- Flow is always: `upstream/main` -> `iAPS_dev` validation -> `iAPS` stable release.
+- Keep `edubloop/iAPS` as close to upstream as possible.
 
-This track should always match the public upstream branch after sync.
+## 3. Stable Release Procedure (`edubloop/iAPS`)
 
-**Prerequisites (One-time setup completed):**
-- GitHub Secrets/Variables configured in `edubloop/iAPS`.
-- Apple Developer IDs/Profiles configured for main bundle IDs.
-- `alive` branch exists: `git push origin main:alive`.
+1. Sync stable branch with upstream:
 
-**Build Workflow:**
-1. **Ensure Sync:** Confirm `main` is up-to-date with `upstream/main`.
-   ```bash
-   git switch main
-   git fetch upstream
-   git merge upstream/main # or rebase if preferred
-   git push origin main
-   ```
-2. **Trigger Workflow:**
-   - Go to **`edubloop/iAPS` → Actions → `4. Build iAPS`**
-   - Branch: `main`
-   - Run Workflow.
-3. **Validation:** If successful, monitor App Store Connect for the new build.
+```bash
+git switch main
+git fetch upstream
+git merge upstream/main
+git push origin main
+```
 
----
+2. Run Actions workflow `4. Build iAPS` on branch `main`.
+3. Validate uploaded build in App Store Connect/TestFlight for the main app.
 
-## 3. Development Track Release (`edubloop/iAPS_dev`)
+## 4. Dev Release Procedure (`edubloop/iAPS_dev`)
 
-Use this track for testing CI fixes and new features that are not ready for stable release.
+1. Work on `dev-ci-hardening` (or short-lived feature branches from it).
+2. Run Actions workflow `4. Build iAPS` on `dev-ci-hardening`.
+3. Validate uploaded build in App Store Connect/TestFlight for the dev app.
 
-**Prerequisites (One-time setup completed):**
-- Repository created (`iAPS_dev`).
-- Branch `dev-ci-hardening` pushed from main.
-- Default branch set to `dev-ci-hardening` in repo settings.
-- Dev Secrets/Variables configured (especially `APP_IDENTIFIER = ru.artpancreas.<TEAMID>.FreeAPS.dev`).
-- Dev Bundle IDs created and configured with **App Groups** + **HealthKit** in Apple Developer.
-- Dev provisioning profiles generated via CI (this was the final successful step).
+Required dev variable:
 
-**Build Workflow:**
-1. **Code Changes:** Apply feature changes to `dev-ci-hardening` (or a feature branch derived from it).
-2. **Trigger Workflow:**
-   - Go to **`edubloop/iAPS_dev` → Actions → `4. Build iAPS`**
-   - Branch: `dev-ci-hardening`
-   - Run Workflow.
-3. **Validation:** The resulting build goes to the **"iAPS Dev"** app in TestFlight.
+- `APP_IDENTIFIER=ru.artpancreas.<TEAMID>.FreeAPS.dev`
 
----
+## 5. One-Time Setup Notes (Already Completed)
 
-## 4. CI Health Checklist (For Troubleshooting)
+- `iAPS_dev` created and configured.
+- `alive` helper branch exists where required by workflow checkout logic.
+- App Store Connect app created for dev bundle ID.
+- Dev Apple identifiers created:
+  - `ru.artpancreas.<TEAMID>.FreeAPS.dev`
+  - `ru.artpancreas.<TEAMID>.FreeAPS.dev.watchkitapp`
+  - `ru.artpancreas.<TEAMID>.FreeAPS.dev.watchkitapp.watchkitextension`
+  - `ru.artpancreas.<TEAMID>.FreeAPS.dev.LiveActivity`
+- App Groups configured and attached (not just enabled):
+  - `group.com.<TEAMID>.loopkit.LoopGroup`
 
-If any workflow fails (especially `4. Build iAPS`):
+## 6. Upstream Update Cadence
 
-1. **Did `3. Create Certificates` pass?** If not, go to Apple Developer and check if the 4 `.dev` App IDs have the **App Group** capability configured (`Enabled App Groups (1)`).
-2. **Did `4. Build iAPS` fail at `match`?** Check `APP_IDENTIFIER` secret value consistency between GitHub Actions variable and Apple Dev ID.
-3. **Did `4. Build iAPS` fail at `gym`?** This usually means a capability (HealthKit/App Groups) is enabled in Xcode/Apple Dev, but not correctly configured in the other. Compare capabilities between main and dev IDs.
-4. **If only `alive` branch fails checkout:** Run `git push origin main:alive` from local repo to recreate it.
-5. **If you change a secret/variable in `iAPS_dev`**: Rerun the entire sequence (`1` through `4`) to ensure all artifacts (certs/profiles) are regenerated for the new value.
+- Recommended cadence: weekly (or immediately for important upstream fixes).
+- Each cycle:
+  1. Sync upstream into `iAPS_dev`.
+  2. Run dev pipeline and smoke test.
+  3. Promote same commit to `iAPS` stable if dev is good.
+
+## 7. CI Troubleshooting Quick Checks
+
+1. `checkout` fails for `alive`: create/refresh with `git push <remote> main:alive`.
+2. `match` fails missing profiles: confirm `APP_IDENTIFIER` and rerun `2 -> 3 -> 4` workflows.
+3. `gym` fails after signing succeeds: check App Groups assignment and HealthKit/NFC capabilities on all app IDs.
+4. After changing secrets/variables: rerun `1. Validate Secrets`, then `2. Add Identifiers`, `3. Create Certificates`, `4. Build iAPS`.
+
+## 8. Current Fastlane Strategy
+
+- Keep using the Artificial-Pancreas fastlane fork in `Gemfile` for compatibility.
+- Do not switch to rubygems fastlane unless intentionally moving away from AP-specific fastlane behavior.
