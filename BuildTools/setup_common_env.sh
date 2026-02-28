@@ -1,7 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BUNDLER_VERSION="2.7.2"
+# Read bundler version from Gemfile.lock if present; fall back to pinned version.
+# To adopt Gemfile.lock: run `bundle lock` locally, commit Gemfile.lock, and
+# this script will auto-detect the required bundler version going forward.
+BUNDLER_VERSION_FALLBACK="2.7.2"
+if [ -f "Gemfile.lock" ] && grep -q "BUNDLED WITH" Gemfile.lock; then
+  BUNDLER_VERSION=$(grep -A1 "BUNDLED WITH" Gemfile.lock | tail -1 | tr -d ' \r')
+  echo "Detected Bundler ${BUNDLER_VERSION} from Gemfile.lock"
+else
+  BUNDLER_VERSION="${BUNDLER_VERSION_FALLBACK}"
+  echo "No Gemfile.lock found; using pinned Bundler ${BUNDLER_VERSION}"
+fi
 
 echo "Installing Bundler ${BUNDLER_VERSION}"
 gem install bundler -v "${BUNDLER_VERSION}"

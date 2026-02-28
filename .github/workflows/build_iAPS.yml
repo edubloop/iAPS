@@ -149,7 +149,8 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: build-artifacts
+          name: build-artifacts-${{ github.run_number }}
+          retention-days: 14
           path: |
             artifacts
             buildlog

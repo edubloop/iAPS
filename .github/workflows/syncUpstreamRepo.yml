@@ -5,8 +5,11 @@ run-name: Sync Upstream (${{ github.ref_name }})
 env:
   UPSTREAM_URL: "https://github.com/Artificial-Pancreas/iAPS.git"
   WORKFLOW_TOKEN: ${{ secrets.GH_PAT }}
-  UPSTREAM_BRANCH: "${{ github.ref_name }}"
-  DOWNSTREAM_BRANCH: "${{ github.ref_name }}"
+  # Always sync upstream/main → this repo's main.
+  # Using ref_name here would break manual dispatch from non-main branches
+  # (upstream has no dev-ci-hardening branch).
+  UPSTREAM_BRANCH: "main"
+  DOWNSTREAM_BRANCH: "main"
   # Optional fetch arguments
   FETCH_ARGS: ""
   # Optional merge arguments

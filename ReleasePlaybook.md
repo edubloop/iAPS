@@ -53,13 +53,24 @@ Required dev variable:
 - App Groups configured and attached (not just enabled):
   - `group.com.<TEAMID>.loopkit.LoopGroup`
 
-## 6. Upstream Update Cadence
+## 6. Upstream Sync — Canonical Path
 
-- Recommended cadence: weekly (or immediately for important upstream fixes).
-- Each cycle:
-  1. Sync upstream into `iAPS_dev`.
-  2. Run dev pipeline and smoke test.
-  3. Promote same commit to `iAPS` stable if dev is good.
+**Canonical sync workflow**: `5. Sync Upstream` (`syncUpstreamRepo.yml`)
+- Runs daily at 03:00 UTC (cron) and is available for manual dispatch.
+- Always syncs `upstream/main` → this repo's `main` branch (hardcoded; does not follow `github.ref_name`).
+- Triggering it from any branch is safe — it will always target `main`.
+
+**Secondary sync path** (`build_iAPS.yml` `SCHEDULED_SYNC` variable):
+- Disabled by default (`SCHEDULED_SYNC` not set).
+- Do not enable it in `iAPS_dev`; keep the build workflow focused on building only.
+- If both paths were active simultaneously they would race; keep only `5. Sync Upstream` active.
+
+**Cadence**: daily automatic sync is sufficient. For urgent upstream fixes, run `5. Sync Upstream` manually then immediately trigger a build.
+
+**Each sync cycle**:
+1. `5. Sync Upstream` runs on `iAPS_dev` (syncs `upstream/main` → `iAPS_dev/main`).
+2. Run dev pipeline (`4. Build iAPS`) and smoke test the TestFlight build.
+3. If dev is green, manually sync the same commit to `edubloop/iAPS` stable.
 
 ## 7. CI Troubleshooting Quick Checks
 
@@ -72,3 +83,20 @@ Required dev variable:
 
 - Keep using the Artificial-Pancreas fastlane fork in `Gemfile` for compatibility.
 - Do not switch to rubygems fastlane unless intentionally moving away from AP-specific fastlane behavior.
+
+## 9. Dependency Lock Strategy
+
+**Current state**: No `Gemfile.lock` committed. `Gemfile` uses git sources (AP fastlane fork), so `bundle lock` cannot produce a fully deterministic lockfile without network access and a committed SHA.
+
+**Bundler version**: Pinned to `2.7.2` in `BuildTools/setup_common_env.sh`. The script auto-detects from `Gemfile.lock` (`BUNDLED WITH` field) if a lockfile is ever committed, with fallback to the pin.
+
+**To adopt a lockfile in future**:
+1. Run `bundle lock` locally (requires network; pins git SHAs).
+2. Commit `Gemfile.lock`.
+3. `setup_common_env.sh` will automatically read the bundler version from it — no script change needed.
+
+## 10. Build Artifact Policy
+
+- Artifacts are named `build-artifacts-<run_number>` for uniqueness across queued runs.
+- Retention: **14 days**. IPAs are large; older artifacts are rarely needed after TestFlight upload succeeds.
+- To change retention, update `retention-days` in `build_iAPS.yml`.
