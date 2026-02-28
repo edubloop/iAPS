@@ -16,7 +16,6 @@ env:
   UPSTREAM_REPO: Artificial-Pancreas/iAPS
   UPSTREAM_BRANCH: ${{ github.ref_name }} # branch on upstream repository to sync from (replace with specific branch name if needed)
   TARGET_BRANCH: ${{ github.ref_name }} # target branch on fork to be kept in sync, and target branch on upstream to be kept alive (replace with specific branch name if needed)
-  ALIVE_BRANCH: alive
 
 jobs:
   auto_build_check:
@@ -30,7 +29,7 @@ jobs:
         id: auto-build-enabled
         run: |
           echo "auto_build=false" >> $GITHUB_OUTPUT
-          if [ ! -z "${{ vars.AUTO_BUILD_BRANCHES }}" ]; then
+          if [ -n "${{ vars.AUTO_BUILD_BRANCHES }}" ]; then
             if echo ",${{ vars.AUTO_BUILD_BRANCHES }}," | grep -q ",${{ github.ref_name }},"; then
               echo "auto_build=true" >> $GITHUB_OUTPUT
             fi
@@ -47,28 +46,11 @@ jobs:
     if: needs.auto_build_check.outputs.AUTO_BUILD_ENABLED == 'true' || github.event_name == 'workflow_dispatch'
     uses: ./.github/workflows/create_certs.yml
     secrets: inherit
-  check_latest_from_upstream:
-    needs: [check_certs]
-    runs-on: ubuntu-latest
-    name: Check upstream
-    outputs: 
-      NEW_COMMITS: ${{ steps.sync.outputs.has_new_commits }}
-    
-    steps:
-    - name: Checkout target repo
-      uses: actions/checkout@v4
-      with:
-        token: ${{ secrets.GH_PAT }}
-        ref: alive
-
-    - name: Set default sync output
-      id: sync
-      run: echo "has_new_commits=false" >> "$GITHUB_OUTPUT"
   
   # Builds iAPS
   build:
     name: Build
-    needs: [check_certs,check_latest_from_upstream]
+    needs: [check_certs]
     runs-on: macos-latest
     permissions:
       contents: write
@@ -121,7 +103,6 @@ jobs:
           vars.SCHEDULED_SYNC == 'true'
         run: |
           echo ${{ steps.sync.outputs.has_new_commits }}
-          echo "NEW_COMMITS=${{ steps.sync.outputs.has_new_commits }}" >> $GITHUB_OUTPUT
 
       - name: Checkout Repo for building
         uses: actions/checkout@v4
