@@ -5,7 +5,6 @@ import Foundation
 ///
 /// Pure static functions — no state, fully testable without DI.
 enum ThresholdCrossingDetector {
-
     // MARK: - Constants
 
     /// Two consecutive readings more than this apart constitute a CGM gap.
@@ -29,7 +28,6 @@ enum ThresholdCrossingDetector {
         windowStart: Date,
         windowEnd: Date
     ) -> (segments: [GlucoseSegment], cgmGaps: [DateInterval]) {
-
         // Step 1: Filter to window, exclude invalid readings, sort chronologically.
         let sorted = glucose
             .filter { $0.dateString >= windowStart && $0.dateString <= windowEnd }
@@ -65,6 +63,7 @@ enum ThresholdCrossingDetector {
     // MARK: - CGM gap detection
 
     static func detectGaps(in sorted: [BloodGlucose]) -> [DateInterval] {
+        guard sorted.count >= 2 else { return [] }
         var gaps: [DateInterval] = []
         for i in 0 ..< sorted.count - 1 {
             let gap = sorted[i + 1].dateString.timeIntervalSince(sorted[i].dateString)
@@ -78,6 +77,8 @@ enum ThresholdCrossingDetector {
     // MARK: - Raw run extraction
 
     /// Builds contiguous runs of readings strictly above `highThreshold`.
+    /// Also splits a run when consecutive above-threshold readings are more than
+    /// `consolidationWindowSeconds` apart (missing data gap during a high event).
     static func buildRawRuns(from sorted: [BloodGlucose], highThreshold: Double) -> [[BloodGlucose]] {
         var runs: [[BloodGlucose]] = []
         var current: [BloodGlucose] = []
@@ -85,6 +86,15 @@ enum ThresholdCrossingDetector {
         for reading in sorted {
             let val = Double(sgvValue(reading))
             if val > highThreshold {
+                // Split on time gaps between consecutive high readings (no in-range readings
+                // bridging them, just missing data). Treat a long gap as an event break.
+                if let prev = current.last {
+                    let gap = reading.dateString.timeIntervalSince(prev.dateString)
+                    if gap > consolidationWindowSeconds {
+                        runs.append(current)
+                        current = []
+                    }
+                }
                 current.append(reading)
             } else {
                 if !current.isEmpty {
@@ -120,7 +130,7 @@ enum ThresholdCrossingDetector {
                     let current = segments[i]
                     let next = segments[i + 1]
                     let gapDuration = next.start.timeIntervalSince(current.end)
-                    if gapDuration < consolidationWindowSeconds {
+                    if gapDuration <= consolidationWindowSeconds {
                         // Merge: collect bridging in-range readings between the two segments.
                         let bridge = allReadings.filter {
                             $0.dateString > current.end && $0.dateString < next.start
