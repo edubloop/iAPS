@@ -136,6 +136,8 @@ struct FreeAPSSettings: JSON, Equatable {
     // 1-min loops
     var allowOneMinuteLoop: Bool = false // allow running loops every minute
     var allowOneMinuteGlucose: Bool = false // allow sending 1-minute readings to oref, even if loops are with 5-minute intervals
+    // TIR Decomposition Engine (Phase 1A, Track 1) — experimental, dev-ci-hardening only
+    var tirAnalysisEnabled: Bool = false
 }
 
 extension FreeAPSSettings: Decodable {

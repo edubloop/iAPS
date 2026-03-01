@@ -1,6 +1,6 @@
 # iAPS Closed-Loop Insulin Delivery System — Product Context File
 Purpose: Ground all feature development, UX decisions, and architecture choices in real-world user needs. This document captures how people actually live with DIY closed-loop insulin delivery — the daily rhythms, edge cases, emotional stakes, and failure modes that the app must handle.
-Status: V1 — Refined via user interview Last updated: 2026-03-01 Primary user: Forrest — 8-year closed-loop veteran, BCG X partner, mobile app developer
+Status: V1 — Refined via user interview Last updated: 2026-03-01 Primary user: Interviewed veteran closed-loop user (8 years experience), technical background
 1. What iAPS Is
 iAPS is an open-source iOS app that automates insulin delivery for people with Type 1 diabetes. It implements the OpenAPS algorithm (oref0) to close the loop between a continuous glucose monitor (CGM) and an insulin pump, adjusting insulin dosing every 5 minutes to keep blood glucose in a target range.
 Lineage & Forks
@@ -20,7 +20,7 @@ Core Algorithm Concepts
 * Dynamic IC (Carb Ratio): Insulin-to-carb ratio adjusts dynamically
 * Autotune: Background process that analyzes historical data and recommends adjustments to basal rates, ISF, and ICR. When enabled, its calculated values replace your profile values as the baseline for autosens. Operates conservatively with strict divergence limits.
 * Adjustment Factor (AF): The single most-tweaked parameter — controls aggressiveness of Dynamic ISF
-1b. Forrest's Specific Setup & Context
+1b. Interviewed User Specific Setup & Context
 Hardware
 * Pump: Omnipod DASH (Bluetooth LE, no bridge device needed)
 * CGM: Dexcom G7 (latest generation, ~30 min warmup, no separate transmitter, smaller profile)
@@ -45,8 +45,8 @@ Priority-Ranked Development Goals
 5. More reliable connectivity / fewer loop breaks (lowest priority — DASH + G7 is already solid)
 Key Pain Points (From Interview)
 * Settings confusion: Too many overlapping settings with unclear cross-effects. Hard to know which knob to turn and what side-effects it will have on other parameters.
-* Autotune's behavioral bias: Autotune actually adjusts basal rates, ISF, and ICR (not just basal). However, in Forrest's experience it tends to ratchet basal upward without proportional reductions — creating a drift that requires manual correction. The docs confirm Autotune is "slow" and has "strict limits to prevent too much divergence from set settings," which may explain why it incrementally increases but rarely decreases. This is a real-world pattern, not a documented design intent.
-* Apple Watch experience: Current Watch app is insufficient as a primary interaction surface; Forrest wants to be able to manage most daily interactions from the wrist.
+* Autotune's behavioral bias: Autotune actually adjusts basal rates, ISF, and ICR (not just basal). However, in this user's experience it tends to ratchet basal upward without proportional reductions — creating a drift that requires manual correction. The docs confirm Autotune is "slow" and has "strict limits to prevent too much divergence from set settings," which may explain why it incrementally increases but rarely decreases. This is a real-world pattern, not a documented design intent.
+* Apple Watch experience: Current Watch app is insufficient as a primary interaction surface; the user wants to be able to manage most daily interactions from the wrist.
 Exercise Patterns
 * Pilates: Strength-focused; initially raises BG (stress/cortisol response), then stabilizes
 * Swimming: Causes BG to drop faster than typical cardio
@@ -82,7 +82,7 @@ B. Parent/Caregiver (Managing for a child)
 C. Clinician-Guided User
 * Endocrinologist or diabetes educator sets up the system
 * User may not deeply understand the algorithm
-* ~4,000+ starts done by individual clinicians like Dr. Rayhan Lal
+* ~4,000+ starts done by high-volume clinicians
 * Settings are configured once and rarely touched by the user
 * Biggest challenge: "un-training" micromanagement habits
 D. Experienced Looper Migrating
@@ -340,7 +340,7 @@ A system-wide learning loop that:
 * Recommends (or auto-applies with user approval) adjustments across all settings, not just basal
 * Explains why a change is being suggested, not just what
 * Can reduce settings as well as increase them (bidirectional tuning)
-* Learns user-specific patterns over time (Forrest's Pilates pattern, travel adaptation, etc.)
+* Learns user-specific patterns over time (the user's Pilates pattern, travel adaptation, etc.)
 Why This Is Hard
 * Confounders are numerous: stress, exercise type/timing, meal composition, hydration, sleep quality, sensor accuracy, site absorption variability
 * Attribution is ambiguous: A post-meal spike could be caused by carb undercount, delayed absorption, stress, or a fading pump site
@@ -354,7 +354,7 @@ Design Principles for This Feature
 4. Progressive autonomy: Start with recommendations → graduate to auto-apply with guard rails
 5. Scoped learning windows: Different settings need different lookback periods (basal = 2 weeks, meal response = per-meal, exercise = per-activity-type)
 12. Development Principles for This Fork
-Based on Forrest's profile (8-year veteran, full-stack developer, sharing with family/friends):
+Based on the interviewed user profile (8-year veteran, full-stack developer, sharing with family/friends):
 1. Don't dumb it down, make it legible: The audience knows diabetes. The problem isn't too many features — it's unclear relationships between features.
 2. Watch-first for daily ops, Phone for tuning: Daily interactions (glance at BG, confirm a bolus, set a temp target) should be achievable from Apple Watch. Deep settings, data review, and tuning stay on the phone.
 3. Insights over data dumps: Raw prediction lines and IOB/COB numbers are necessary but insufficient. The app should surface interpretive insights: "You tend to spike after lunch on days you skip pre-bolus" or "Your AF may be too aggressive — you had 3 lows this week that followed SMB clusters."

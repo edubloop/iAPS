@@ -6,17 +6,17 @@ This playbook defines a stable release path for current users and an isolated de
 
 | Repository | Role | Default Branch | TestFlight Target |
 | :--- | :--- | :--- | :--- |
-| `edubloop/iAPS` | Stable production fork synced to upstream | `main` | Main app (`...FreeAPS`) |
-| `edubloop/iAPS_dev` | Integration and testing fork | `dev-ci-hardening` | Dev app (`...FreeAPS.dev`) |
-| `edubloop/Match-Secrets` | Shared signing assets repository | `master` | N/A |
+| `<fork-owner>/iAPS` | Stable production fork synced to upstream | `main` | Main app (`...FreeAPS`) |
+| `<fork-owner>/iAPS_dev` | Integration and testing fork | `dev-ci-hardening` | Dev app (`...FreeAPS.dev`) |
+| `<fork-owner>/Match-Secrets` | Shared signing assets repository | `master` | N/A |
 
 ## 2. Promotion Rule
 
 - Never release to stable before dev is green.
 - Flow is always: `upstream/main` -> `iAPS_dev` validation -> `iAPS` stable release.
-- Keep `edubloop/iAPS` as close to upstream as possible.
+- Keep `<fork-owner>/iAPS` as close to upstream as possible.
 
-## 3. Stable Release Procedure (`edubloop/iAPS`)
+## 3. Stable Release Procedure (`<fork-owner>/iAPS`)
 
 1. Sync stable branch with upstream:
 
@@ -30,7 +30,7 @@ git push origin main
 2. Run Actions workflow `4. Build iAPS` on branch `main`.
 3. Validate uploaded build in App Store Connect/TestFlight for the main app.
 
-## 4. Dev Release Procedure (`edubloop/iAPS_dev`)
+## 4. Dev Release Procedure (`<fork-owner>/iAPS_dev`)
 
 1. Work on `dev-ci-hardening` (or short-lived feature branches from it).
 2. Run Actions workflow `4. Build iAPS` on `dev-ci-hardening`.
@@ -70,7 +70,7 @@ Required dev variable:
 **Each sync cycle**:
 1. `5. Sync Upstream` runs on `iAPS_dev` (syncs `upstream/main` → `iAPS_dev/main`).
 2. Run dev pipeline (`4. Build iAPS`) and smoke test the TestFlight build.
-3. If dev is green, manually sync the same commit to `edubloop/iAPS` stable.
+3. If dev is green, manually sync the same commit to `<fork-owner>/iAPS` stable.
 
 ## 7. CI Troubleshooting Quick Checks
 
