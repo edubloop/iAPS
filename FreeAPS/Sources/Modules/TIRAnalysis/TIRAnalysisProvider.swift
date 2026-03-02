@@ -69,13 +69,18 @@ extension TIRAnalysis {
                     windowEnd: windowEnd,
                     extraCaveats: ["Simulator mode active: \(scenario.title) scenario"]
                 )
+                let readiness = TIRReadiness.sufficient(
+                    windowDays: windowDays,
+                    glucoseCoverage: coverage.glucoseCoverage
+                )
 
                 debug(.service, "TIR simulation complete: \(events.count) events, scenario \(scenario.rawValue)")
                 return TIRAnalysisResult(
                     events: events,
                     windowCoverage: coverage,
                     analysisDate: now,
-                    rangeBreakdown: buildRangeBreakdown(glucose: simInput.glucose)
+                    rangeBreakdown: buildRangeBreakdown(glucose: simInput.glucose),
+                    readiness: readiness
                 )
             }
 
@@ -114,6 +119,33 @@ extension TIRAnalysis {
                 $0.timestamp.addingTimeInterval(24 * 3600) > now
             }
 
+            let readiness = buildReadiness(
+                glucose: glucose,
+                windowStart: windowStart,
+                windowEnd: windowEnd,
+                windowDays: windowDays
+            )
+
+            if !readiness.isSufficient {
+                let coverage = buildCoverage(
+                    glucose: glucose,
+                    carbEntries: carbEntries,
+                    pumpHistory: recentPump,
+                    windowDays: windowDays,
+                    windowEnd: windowEnd,
+                    extraCaveats: sourceCaveats + (readiness.message.map { [$0] } ?? []),
+                    source: source
+                )
+
+                return TIRAnalysisResult(
+                    events: [],
+                    windowCoverage: coverage,
+                    analysisDate: now,
+                    rangeBreakdown: buildRangeBreakdown(glucose: glucose),
+                    readiness: readiness
+                )
+            }
+
             // 5. Run engine. IOB history unavailable in iAPS (no rolling store).
             let input = TIRAnalysisInput(
                 glucose: glucose,
@@ -148,7 +180,8 @@ extension TIRAnalysis {
                 events: events,
                 windowCoverage: coverage,
                 analysisDate: now,
-                rangeBreakdown: buildRangeBreakdown(glucose: glucose)
+                rangeBreakdown: buildRangeBreakdown(glucose: glucose),
+                readiness: readiness
             )
         }
 
@@ -234,6 +267,45 @@ extension TIRAnalysis {
                 inRange: inRange,
                 high: high,
                 veryHigh: veryHigh
+            )
+        }
+
+        private func buildReadiness(
+            glucose: [BloodGlucose],
+            windowStart: Date,
+            windowEnd: Date,
+            windowDays: Int
+        ) -> TIRReadiness {
+            let valid = glucose
+                .filter { $0.isStateValid }
+                .filter { $0.dateString >= windowStart && $0.dateString <= windowEnd }
+
+            let expectedCount = max(windowDays * 288, 1)
+            let glucoseCoverage = min(1.0, Double(valid.count) / Double(expectedCount))
+
+            let minRecordsPerFullDay = Int(288 * 70 / 100)
+            let calendar = Calendar.current
+            var countsByDay: [Date: Int] = [:]
+            for reading in valid {
+                let day = calendar.startOfDay(for: reading.dateString)
+                countsByDay[day, default: 0] += 1
+            }
+
+            let fullDays = min(windowDays, countsByDay.values.filter { $0 >= minRecordsPerFullDay }.count)
+            let daysLeft = max(0, windowDays - fullDays)
+            let isSufficient = daysLeft == 0
+            let message: String? = isSufficient
+                ? nil
+                : "Need \(daysLeft) more full \(daysLeft == 1 ? "day" : "days") for \(windowDays)-day insights (\(fullDays)/\(windowDays) full days available)."
+
+            return TIRReadiness(
+                windowDays: windowDays,
+                fullDaysAvailable: fullDays,
+                requiredFullDays: windowDays,
+                daysLeft: daysLeft,
+                glucoseCoverage: glucoseCoverage,
+                isSufficient: isSufficient,
+                message: message
             )
         }
 

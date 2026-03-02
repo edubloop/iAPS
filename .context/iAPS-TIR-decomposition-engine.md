@@ -22,6 +22,14 @@ This spec is broader than current Phase 1A implementation. The following reflect
   - No auto/fallback mode.
 - Simulator mode and scenario picker are available in the same TIR Insights config screen.
 - Summary UI supports `7 / 14 / 30 / 90` day windows.
+- Summary enforces a minimum-data readiness gate per selected window:
+  - `7d` requires 7 full days
+  - `14d` requires 14 full days
+  - `30d` requires 30 full days
+  - `90d` requires 90 full days
+  - A "full day" is >=70% of expected 5-minute glucose points.
+  - If insufficient, UI shows days left and blocks pattern insights until ready.
+  - Simulator mode bypasses this gate.
 - Summary includes a visual TIR band breakdown:
   - Very Low, Low, In Range, High, Very High.
 - Event presentation is grouped as:

@@ -203,6 +203,7 @@ struct TIRAnalysisResult {
     let windowCoverage: WindowCoverage
     let analysisDate: Date
     let rangeBreakdown: TIRRangeBreakdown
+    let readiness: TIRReadiness
 
     /// Sum of tirCost across all events.
     var totalTIRCost: Double {
@@ -226,4 +227,26 @@ struct TIRRangeBreakdown {
     let veryHigh: Double
 
     static let empty = TIRRangeBreakdown(veryLow: 0, low: 0, inRange: 0, high: 0, veryHigh: 0)
+}
+
+struct TIRReadiness {
+    let windowDays: Int
+    let fullDaysAvailable: Int
+    let requiredFullDays: Int
+    let daysLeft: Int
+    let glucoseCoverage: Double
+    let isSufficient: Bool
+    let message: String?
+
+    static func sufficient(windowDays: Int, glucoseCoverage: Double) -> TIRReadiness {
+        TIRReadiness(
+            windowDays: windowDays,
+            fullDaysAvailable: windowDays,
+            requiredFullDays: windowDays,
+            daysLeft: 0,
+            glucoseCoverage: glucoseCoverage,
+            isSufficient: true,
+            message: nil
+        )
+    }
 }

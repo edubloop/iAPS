@@ -29,25 +29,43 @@ struct TIRSummaryView: View {
                 .disabled(state.isAnalyzing)
 
                 if let result = state.analysisResult {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Time in Range")
+                    if result.readiness.isSufficient {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Time in Range")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Text(result.rangeBreakdown.inRange, format: .percent.precision(.fractionLength(1)))
+                                .font(.title2)
+                                .fontWeight(.bold)
+                            Text(
+                                "Estimated impacted by patterns: \(result.totalTIRCost, format: .percent.precision(.fractionLength(1)))"
+                            )
                             .font(.caption)
                             .foregroundColor(.secondary)
-                        Text(result.rangeBreakdown.inRange, format: .percent.precision(.fractionLength(1)))
-                            .font(.title2)
-                            .fontWeight(.bold)
-                        Text(
-                            "Estimated impacted by patterns: \(result.totalTIRCost, format: .percent.precision(.fractionLength(1)))"
-                        )
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        rangeBar(result.rangeBreakdown)
-                        rangeLegend(result.rangeBreakdown)
-                        Text("\(result.events.count) events • \(result.analysisDate, style: .date)")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                            rangeBar(result.rangeBreakdown)
+                            rangeLegend(result.rangeBreakdown)
+                            Text("\(result.events.count) events • \(result.analysisDate, style: .date)")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.vertical, 4)
+                    } else {
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("Insufficient data")
+                                .font(.headline)
+                            Text(result.readiness.message ?? "More full days are needed before insights can be generated.")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                            ProgressView(
+                                value: Double(result.readiness.fullDaysAvailable),
+                                total: Double(result.readiness.requiredFullDays)
+                            )
+                            Text("\(result.readiness.fullDaysAvailable)/\(result.readiness.requiredFullDays) full days ready • \(result.readiness.daysLeft) day(s) left")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.vertical, 4)
                     }
-                    .padding(.vertical, 4)
                 }
             }
 
@@ -61,7 +79,7 @@ struct TIRSummaryView: View {
                 }
             }
 
-            if let result = state.analysisResult {
+            if let result = state.analysisResult, result.readiness.isSufficient {
                 Section("High Patterns") {
                     breakdownRow(result: result, category: .reboundHigh)
                     breakdownRow(result: result, category: .persistentElevation)

@@ -46,6 +46,7 @@ To avoid ambiguity between docs, data sources are split by execution context:
   - Glucose + carbs source: selectable (`Nightscout` or `HealthKit`) via TIR Insights config
   - Default source: `Nightscout` (`tirDataSource = "nightscout"`)
   - Nightscout path requires URL/API secret and `nightscoutFetchEnabled`; upload strongly recommended if no external uploader
+  - Insights are gated by minimum data readiness per selected window (7/14/30/90 full-day requirement)
   - Pump history / SMB evidence: iAPS file storage (`monitor/pumphistory*.json`, ~24 h)
   - IOB history: currently unavailable as rolling series; `CONSTRAINT_LIMITED` may downgrade/skip
 
@@ -134,6 +135,20 @@ Usable summary flow with grouped pattern presentation, source selection, simulat
 - **Data Quality:** Post Connectivity Gap
 - **Unclassified Outliers:** combined row with split metrics (`High x% • Low y%`)
 
+### Minimum data readiness gate
+- Insights are shown only when the selected window has enough **full days** of glucose data:
+  - 7-day filter requires 7 full days
+  - 14-day filter requires 14 full days
+  - 30-day filter requires 30 full days
+  - 90-day filter requires 90 full days
+- A day is counted as "full" when at least 70% of expected 5-minute readings are present.
+- When insufficient, summary shows a friendly blocked state with:
+  - days available vs required,
+  - days left,
+  - progress bar,
+  - no pattern insights/breakdown links.
+- Simulator mode bypasses the readiness gate.
+
 ### Files
 ```
 FreeAPS/Sources/Modules/TIRAnalysis/View/
@@ -157,7 +172,7 @@ Each track is independently committable.
 
 | File | Purpose |
 |------|---------|
-| `FreeAPS/Sources/Modules/TIRAnalysis/Engine/TIRModels.swift` | All engine + result types |
+| `FreeAPS/Sources/Modules/TIRAnalysis/Engine/TIRModels.swift` | All engine + result types (`TIRReadiness` included) |
 | `FreeAPS/Sources/Modules/TIRAnalysis/Engine/EventClassifier.swift` | Category + confidence; Track 3 adds factors |
 | `FreeAPS/Sources/Modules/TIRAnalysis/Engine/TIRAnalysisEngine.swift` | Orchestrator; Track 3 threads factors through |
 | `FreeAPS/Sources/Modules/TIRAnalysis/Engine/TIRSettingsAuditor.swift` | Static settings-risk checks for Track 4 |
