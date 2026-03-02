@@ -1,9 +1,7 @@
-// TypeStubs.swift — minimal reproductions of the iAPS types used by the TIR engine.
-// These are kept 1:1 with the real definitions so the engine + test files compile unchanged.
-
 import Foundation
 
 // MARK: - JSON protocol (stub)
+
 // In the real app this is a Codable+Hashable typealias via SwiftyJSON.
 // For testing, Codable suffices.
 public typealias JSON = Codable
@@ -48,6 +46,7 @@ public struct BloodGlucose: Codable, Identifiable, Hashable {
     public static func == (lhs: BloodGlucose, rhs: BloodGlucose) -> Bool {
         lhs.dateString == rhs.dateString
     }
+
     public func hash(into hasher: inout Hasher) { hasher.combine(dateString) }
 }
 
@@ -93,11 +92,11 @@ public struct CarbsEntry: Codable, Equatable, Hashable {
 // MARK: - EventType + PumpHistoryEvent
 
 public enum EventType: String, Codable {
-    case bolus          = "Bolus"
-    case smb            = "SMB"
-    case tempBasal      = "TempBasal"
-    case pumpSuspend    = "PumpSuspend"
-    case pumpResume     = "PumpResume"
+    case bolus = "Bolus"
+    case smb = "SMB"
+    case tempBasal = "TempBasal"
+    case pumpSuspend = "PumpSuspend"
+    case pumpResume = "PumpResume"
     // (others omitted — engine only checks .smb)
 }
 

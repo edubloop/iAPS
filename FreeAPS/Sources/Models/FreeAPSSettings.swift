@@ -138,6 +138,9 @@ struct FreeAPSSettings: JSON, Equatable {
     var allowOneMinuteGlucose: Bool = false // allow sending 1-minute readings to oref, even if loops are with 5-minute intervals
     // TIR Decomposition Engine (Phase 1A, Track 1) — experimental, dev-ci-hardening only
     var tirAnalysisEnabled: Bool = false
+    var tirSimulationEnabled: Bool = false
+    var tirSimulationScenario: String = "mixed_realistic"
+    var tirDataSource: String = "nightscout"
 }
 
 extension FreeAPSSettings: Decodable {
@@ -664,6 +667,22 @@ extension FreeAPSSettings: Decodable {
         }
         if let allowOneMinuteGlucose = try? container.decode(Bool.self, forKey: .allowOneMinuteGlucose) {
             settings.allowOneMinuteGlucose = allowOneMinuteGlucose
+        }
+
+        if let tirAnalysisEnabled = try? container.decode(Bool.self, forKey: .tirAnalysisEnabled) {
+            settings.tirAnalysisEnabled = tirAnalysisEnabled
+        }
+
+        if let tirSimulationEnabled = try? container.decode(Bool.self, forKey: .tirSimulationEnabled) {
+            settings.tirSimulationEnabled = tirSimulationEnabled
+        }
+
+        if let tirSimulationScenario = try? container.decode(String.self, forKey: .tirSimulationScenario) {
+            settings.tirSimulationScenario = tirSimulationScenario
+        }
+
+        if let tirDataSource = try? container.decode(String.self, forKey: .tirDataSource) {
+            settings.tirDataSource = tirDataSource
         }
 
         self = settings

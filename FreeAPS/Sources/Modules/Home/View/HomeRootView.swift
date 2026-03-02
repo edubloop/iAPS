@@ -591,6 +591,35 @@ extension Home {
                 }
         }
 
+        var tirInsightsEntry: some View {
+            addBackground()
+                .frame(minHeight: 90)
+                .overlay {
+                    HStack(spacing: 12) {
+                        Image(systemName: "chart.bar.doc.horizontal")
+                            .font(.title2)
+                            .foregroundColor(.blue)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("TIR Insights")
+                                .font(.headline)
+                            Text("Decompose high events by cause and review settings risk audit")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .foregroundStyle(.tertiary)
+                    }
+                    .padding(.horizontal, 14)
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 15))
+                .addShadows()
+                .padding(.horizontal, 10)
+                .onTapGesture {
+                    state.showModal(for: .tirAnalysis)
+                }
+        }
+
         var profileView: some View {
             HStack(spacing: 0) {
                 if let override = fetchedPercent.first {
@@ -845,6 +874,10 @@ extension Home {
                                 }
                                 // Loops Chart
                                 loopPreview.padding(.vertical, 15)
+
+                                if state.tirAnalysisEnabled {
+                                    tirInsightsEntry.padding(.bottom, 15)
+                                }
 
                                 // COB Chart
                                 if state.carbData > 0 {

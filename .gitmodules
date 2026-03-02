@@ -15,7 +15,8 @@
 	url = https://github.com/Artificial-Pancreas/MinimedKit.git
 [submodule "OmniBLE"]
 	path = OmniBLE
-	url = https://github.com/Artificial-Pancreas/OmniBLE.git
+	url = https://github.com/edubloop/OmniBLE.git
+	branch = dev-ci-hardening
 [submodule "OmniKit"]
 	path = OmniKit
 	url = https://github.com/Artificial-Pancreas/OmniKit.git
@@ -27,8 +28,8 @@
 	url = https://github.com/Artificial-Pancreas/RileyLinkKit
 [submodule "TidepoolService"]
 	path = TidepoolService
-	url = https://github.com/Artificial-Pancreas/TidepoolService.git
-	branch = dev
+	url = https://github.com/edubloop/TidepoolService.git
+	branch = dev-ci-hardening
 [submodule "NightscoutRemoteCGM"]
 	path = NightscoutRemoteCGM
 	url = https://github.com/Artificial-Pancreas/NightscoutRemoteCGM.git

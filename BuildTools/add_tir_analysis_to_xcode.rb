@@ -36,6 +36,9 @@ tir_group = modules_group.find_subpath('TIRAnalysis') ||
 engine_group = tir_group.find_subpath('Engine') ||
                tir_group.new_group('Engine', 'Engine')
 
+view_group = tir_group.find_subpath('View') ||
+             tir_group.new_group('View', 'View')
+
 # Module-level files (Track 1 stubs + Track 2 additions)
 module_stubs = %w[
   TIRAnalysisDataFlow.swift
@@ -51,6 +54,13 @@ engine_files = %w[
   EventClassifier.swift
   TIRAnalysisEngine.swift
   TIRSettingsAuditor.swift
+]
+
+view_files = %w[
+  TIRRootView.swift
+  TIRSummaryView.swift
+  TIRCategoryDetailView.swift
+  TIRSettingsAuditView.swift
 ]
 
 new_app_refs = []
@@ -72,6 +82,15 @@ engine_files.each do |filename|
   ref = engine_group.new_file(abs)
   new_app_refs << ref
   puts "  + TIRAnalysis/Engine/#{filename}"
+end
+
+view_files.each do |filename|
+  abs = File.join(REPO_ROOT, 'FreeAPS/Sources/Modules/TIRAnalysis/View', filename)
+  next unless File.exist?(abs)
+  next if view_group.children.any? { |c| c.path == filename }
+  ref = view_group.new_file(abs)
+  new_app_refs << ref
+  puts "  + TIRAnalysis/View/#{filename}"
 end
 
 app_target.add_file_references(new_app_refs) unless new_app_refs.empty?

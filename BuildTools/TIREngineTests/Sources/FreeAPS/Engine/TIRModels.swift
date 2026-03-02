@@ -11,6 +11,10 @@ enum TIREventCategory: String, Codable, CaseIterable {
     case risingWithoutCarbs = "RISING_WITHOUT_CARBS"
     case persistentElevation = "PERSISTENT_ELEVATION"
     case unclassifiedHigh = "UNCLASSIFIED_HIGH"
+    case reboundLow = "REBOUND_LOW"
+    case persistentLow = "PERSISTENT_LOW"
+    case fallingWithoutActiveInsulin = "FALLING_WITHOUT_ACTIVE_INSULIN"
+    case unclassifiedLow = "UNCLASSIFIED_LOW"
     // Deferred to Track 2+: POST_MEAL_SPIKE and subcategories, LOW events
 }
 
@@ -198,6 +202,7 @@ struct TIRAnalysisResult {
     let events: [TIREvent]
     let windowCoverage: WindowCoverage
     let analysisDate: Date
+    let rangeBreakdown: TIRRangeBreakdown
 
     /// Sum of tirCost across all events.
     var totalTIRCost: Double {
@@ -211,4 +216,14 @@ struct TIRAnalysisResult {
     func tirCost(for category: TIREventCategory) -> Double {
         events(for: category).map(\.tirCost).reduce(0, +)
     }
+}
+
+struct TIRRangeBreakdown {
+    let veryLow: Double
+    let low: Double
+    let inRange: Double
+    let high: Double
+    let veryHigh: Double
+
+    static let empty = TIRRangeBreakdown(veryLow: 0, low: 0, inRange: 0, high: 0, veryHigh: 0)
 }

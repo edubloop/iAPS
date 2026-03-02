@@ -98,6 +98,16 @@ extension Settings {
                         Text("Contact Image").navigationLink(to: .contactTrick, from: self)
                         Text("Dynamic ISF").navigationLink(to: .dynamicISF, from: self)
                         Text("Auto ISF").navigationLink(to: .autoISF, from: self)
+                        NavigationLink {
+                            tirInsightsConfigView
+                        } label: {
+                            HStack {
+                                Text("TIR Insights")
+                                Spacer()
+                                Text(tirInsightsStatus)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
                     } header: { Text("Extra Features") }
 
                     Section {
@@ -278,6 +288,50 @@ extension Settings {
                     }
                 } header: { Text("Delete CoreData database records") }
             }
+        }
+
+        private var tirInsightsStatus: String {
+            guard state.tirAnalysisEnabled else { return "Off" }
+            let source = state.tirDataSource == "healthkit" ? "HealthKit" : "Nightscout"
+            guard state.tirSimulationEnabled else { return "On • \(source)" }
+            switch state.tirSimulationScenario {
+            case "rebound_heavy": return "On • Rebound-focused"
+            case "post_gap_heavy": return "On • Post-gap"
+            case "constraint_limited": return "On • Constraint-limited"
+            default: return "On • Mixed"
+            }
+        }
+
+        private var tirInsightsConfigView: some View {
+            Form {
+                Section {
+                    Toggle("Enable TIR Insights", isOn: $state.tirAnalysisEnabled)
+                }
+
+                if state.tirAnalysisEnabled {
+                    Section {
+                        Picker("Data Source", selection: $state.tirDataSource) {
+                            Text("Nightscout").tag("nightscout")
+                            Text("HealthKit").tag("healthkit")
+                        }
+
+                        Toggle("Simulator Mode", isOn: $state.tirSimulationEnabled)
+
+                        if state.tirSimulationEnabled {
+                            Picker("Scenario", selection: $state.tirSimulationScenario) {
+                                Text("Mixed realistic").tag("mixed_realistic")
+                                Text("Rebound-focused").tag("rebound_heavy")
+                                Text("Post-gap focused").tag("post_gap_heavy")
+                                Text("Constraint-limited").tag("constraint_limited")
+                            }
+                        }
+                    } header: {
+                        Text("Analysis")
+                    }
+                }
+            }
+            .navigationTitle("TIR Insights")
+            .navigationBarTitleDisplayMode(.inline)
         }
     }
 }

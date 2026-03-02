@@ -16,6 +16,10 @@ extension Settings {
         @Published var noCarbs = false
         @Published var allowOneMinuteLoop = false
         @Published var allowOneMinuteGlucose = false
+        @Published var tirAnalysisEnabled = false
+        @Published var tirSimulationEnabled = false
+        @Published var tirSimulationScenario = "mixed_realistic"
+        @Published var tirDataSource = "nightscout"
         @Published var entities: [Cleared] = CoreDataStack.shared.persistentContainer.managedObjectModel.entities
             .compactMap(\.name).map {
                 Cleared(entity: $0, deleted: false)
@@ -36,6 +40,10 @@ extension Settings {
             subscribeSetting(\.noCarbs, on: $noCarbs) { noCarbs = $0 }
             subscribeSetting(\.allowOneMinuteLoop, on: $allowOneMinuteLoop) { allowOneMinuteLoop = $0 }
             subscribeSetting(\.allowOneMinuteGlucose, on: $allowOneMinuteGlucose) { allowOneMinuteGlucose = $0 }
+            subscribeSetting(\.tirAnalysisEnabled, on: $tirAnalysisEnabled) { tirAnalysisEnabled = $0 }
+            subscribeSetting(\.tirSimulationEnabled, on: $tirSimulationEnabled) { tirSimulationEnabled = $0 }
+            subscribeSetting(\.tirSimulationScenario, on: $tirSimulationScenario) { tirSimulationScenario = $0 }
+            subscribeSetting(\.tirDataSource, on: $tirDataSource) { tirDataSource = $0 }
 
             broadcaster.register(SettingsObserver.self, observer: self)
             buildNumber = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "Unknown"
@@ -101,6 +109,10 @@ extension Settings.StateModel: SettingsObserver {
         closedLoop = settings.closedLoop
         debugOptions = settings.debugOptions
         allowDilution = settings.allowDilution
+        tirAnalysisEnabled = settings.tirAnalysisEnabled
+        tirSimulationEnabled = settings.tirSimulationEnabled
+        tirSimulationScenario = settings.tirSimulationScenario
+        tirDataSource = settings.tirDataSource
     }
 }
 

@@ -84,6 +84,7 @@ extension Home {
         @Published var carbButton: Bool = true
         @Published var profileButton: Bool = true
         @Published var mealData = MealData()
+        @Published var tirAnalysisEnabled: Bool = false
 
         // Chart data
         var data = ChartModel(
@@ -217,6 +218,7 @@ extension Home {
 
             carbButton = settingsManager.settings.carbButton
             profileButton = settingsManager.settings.profileButton
+            tirAnalysisEnabled = settingsManager.settings.tirAnalysisEnabled
 
             broadcaster.register(GlucoseObserver.self, observer: self)
             broadcaster.register(SuggestionObserver.self, observer: self)
@@ -798,6 +800,7 @@ extension Home.StateModel:
 //        cgm = settingsManager.settings.cgm
         carbButton = settingsManager.settings.carbButton
         profileButton = settingsManager.settings.profileButton
+        tirAnalysisEnabled = settingsManager.settings.tirAnalysisEnabled
         updateSensorDays()
 
         setupGlucose()

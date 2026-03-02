@@ -93,7 +93,7 @@ struct TIRHealthKitReader {
         return BloodGlucose(
             _id: sample.uuid.uuidString,
             sgv: sgv,
-            date: Decimal(ts.timeIntervalSince1970 * 1_000), // ms since epoch (Nightscout convention)
+            date: Decimal(ts.timeIntervalSince1970 * 1000), // ms since epoch (Nightscout convention)
             dateString: ts,
             glucose: sgv
             // noise: nil → isStateValid = (sgv >= 39 && 1 != 4) = true for valid readings

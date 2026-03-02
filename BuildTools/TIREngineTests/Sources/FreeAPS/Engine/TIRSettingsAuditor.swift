@@ -21,7 +21,7 @@ enum TIRSettingsAuditor {
 
         let autosensMax = NSDecimalNumber(decimal: preferences.autosensMax).doubleValue
         let adjustmentFactor = NSDecimalNumber(decimal: preferences.adjustmentFactor).doubleValue
-        if preferences.sigmoid && autosensMax > 1.5 {
+        if preferences.sigmoid, autosensMax > 1.5 {
             findings.append(TIRSettingsAuditFinding(
                 severity: .watch,
                 message: String(
@@ -44,7 +44,7 @@ enum TIRSettingsAuditor {
         }
 
         let maxDelta = NSDecimalNumber(decimal: preferences.maxDeltaBGthreshold).doubleValue
-        if preferences.enableUAM && maxDelta < 0.25 {
+        if preferences.enableUAM, maxDelta < 0.25 {
             findings.append(TIRSettingsAuditFinding(
                 severity: .watch,
                 message: String(

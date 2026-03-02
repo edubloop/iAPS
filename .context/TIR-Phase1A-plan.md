@@ -24,9 +24,9 @@
 | **2** | `TIRAnalysisStateModel` — `@Published` results + `triggerAnalysis()` | ✅ Complete |
 | **2** | `TIRAnalysisDataFlow` — `runAnalysis(windowDays:)` protocol method | ✅ Complete |
 | **3** | Contributing factor population | ✅ Complete |
-| **4** | Settings audit — static analysis of `FreeAPSSettings` + `Preferences` | 🟡 In progress |
-| **5** | SwiftUI summary screen + category detail screen | ❌ Not started |
-| **5** | Settings audit screen | ❌ Not started |
+| **4** | Settings audit — static analysis of `FreeAPSSettings` + `Preferences` | ✅ Complete |
+| **5** | SwiftUI summary screen + category detail screen | 🟡 In progress |
+| **5** | Settings audit screen | 🟡 In progress |
 
 ---
 
@@ -115,15 +115,16 @@ enum TIRSettingsAuditor {
 ## Track 5 — SwiftUI UI
 
 ### Goal
-Minimal but usable summary view gated by `tirAnalysisEnabled`. Sheet presented from existing Home view.
+Usable summary flow with grouped pattern presentation, simulator controls, and clearer audit guidance.
 
 ### Views (3)
-1. **`TIRSummaryView`** — TIR % header, category breakdown rows with TIR cost bars, "Analyze" button, caveat banner
-2. **`TIRCategoryDetailView`** — event list per category, duration + peak severity, factor chips
-3. **`TIRSettingsAuditView`** — findings list (⚠ WATCH / ✓ OK rows)
+1. **`TIRSummaryView`** — 7/14/30/90-day windows, TIR zone bar (very low/low/in-range/high/very high), grouped breakdown sections
+2. **`TIRCategoryDetailView`** — event list per category/group with duration + severity + factor chips
+3. **`TIRSettingsAuditView`** — plain-language findings (What we see / Why it matters / What to try)
 
 ### Navigation
 - Entry point: row in existing Home → Statistics/Insights section; sheet presented; gated by `tirAnalysisEnabled`
+- Settings controls: single expandable **TIR Insights** entry under **Extra Features** (enable, simulator on/off, scenario picker)
 - No new tab required
 
 ### Files
@@ -156,10 +157,12 @@ Each track is independently committable.
 | `FreeAPS/Sources/Modules/TIRAnalysis/TIRHealthKitReader.swift` | HealthKit fetch layer (read-only) |
 | `FreeAPS/Sources/Modules/TIRAnalysis/TIRAnalysisProvider.swift` | Data fetch + engine call |
 | `FreeAPS/Sources/Modules/TIRAnalysis/TIRAnalysisStateModel.swift` | @Published state + triggerAnalysis() |
+| `FreeAPS/Sources/Modules/TIRAnalysis/View/TIRRootView.swift` | Track 5 modal entry for TIR insights |
+| `FreeAPS/Sources/Modules/TIRAnalysis/View/TIRSummaryView.swift` | Track 5 summary + navigation |
 | `FreeAPS/Sources/Services/HealthKit/HealthKitManager.swift` | Existing write service — do NOT modify |
-| `FreeAPS/Sources/Models/FreeAPSSettings.swift` | `high`, `low`, `units`, `tirAnalysisEnabled` |
+| `FreeAPS/Sources/Models/FreeAPSSettings.swift` | `high`, `low`, `units`, `tirAnalysisEnabled`, simulator flags |
 | `FreeAPS/Sources/Models/Preferences.swift` | `maxIOB`, `maxDeltaBGthreshold`, `sigmoid`, `autosensMax` |
-| `BuildTools/run_tir_tests.sh` | Run 21 engine tests via standalone Swift Package |
+| `BuildTools/run_tir_tests.sh` | Run TIR engine tests via standalone Swift Package |
 | `BuildTools/add_tir_analysis_to_xcode.rb` | Register new files in Xcode project (idempotent) |
 | `.context/TIR-Phase1A-Track0.md` | Canonical event contract + confidence policy |
 | `.context/fixtures/tir/phase1a-model-examples.json` | Round-trip fixture for TC-19 |
@@ -175,4 +178,4 @@ bash BuildTools/run_tir_tests.sh
 ```
 
 Copies engine source + test files fresh before each run, then executes `swift test` on macOS.
-All 21 tests must pass before any commit.
+Current baseline is 32 tests passing before any commit.

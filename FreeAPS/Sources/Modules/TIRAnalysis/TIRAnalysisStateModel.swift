@@ -23,6 +23,9 @@ extension TIRAnalysis {
         /// Used by Track 5 UI to surface data-quality warnings.
         @Published var coverageCaveat: String? = nil
 
+        /// Static settings-risk audit report (Track 4).
+        @Published var auditReport: TIRSettingsAuditReport? = nil
+
         // MARK: - Actions
 
         /// Runs analysis on demand. Concurrent calls are silently ignored.
@@ -31,6 +34,7 @@ extension TIRAnalysis {
             guard !isAnalyzing else { return }
             isAnalyzing = true
             coverageCaveat = nil
+            refreshAuditReport()
             let days = windowDays
             Task {
                 let result = await provider.runAnalysis(windowDays: days)
@@ -45,8 +49,15 @@ extension TIRAnalysis {
         // MARK: - BaseStateModel
 
         override func subscribe() {
-            // On-demand only — analysis is triggered by the user, not automatically.
-            // Track 5 may add a Combine subscription to re-run on windowDays change.
+            // On-demand analysis; static settings audit can be shown immediately.
+            refreshAuditReport()
+        }
+
+        func refreshAuditReport() {
+            auditReport = TIRSettingsAuditor.audit(
+                settings: settingsManager.settings,
+                preferences: settingsManager.preferences
+            )
         }
     }
 }

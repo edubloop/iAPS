@@ -2,7 +2,6 @@
 import XCTest
 
 final class TIRSettingsAuditorTests: XCTestCase {
-
     // MARK: - Smoke
 
     /// Ensures the auditor always produces at least one finding per check.
