@@ -25,12 +25,23 @@ ENV["FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT"] = "120"
 
 APP_IDENTIFIER = ENV.fetch('APP_IDENTIFIER') { "ru.artpancreas.#{TEAMID}.FreeAPS" }
 
+override_lines = []
+
 if ENV['BUILD_GROUP']
-  File.write('../ConfigOverride.xcconfig', "COPYRIGHT_NOTICE = #{ENV['BUILD_GROUP']}\n", mode: 'a')
+  override_lines << "COPYRIGHT_NOTICE = #{ENV['BUILD_GROUP']}"
 end
 
-if #{APP_IDENTIFIER} != "ru.artpancreas.#{TEAMID}.FreeAPS"
-  File.write('../ConfigOverride.xcconfig', "BUNDLE_IDENTIFIER = #{APP_IDENTIFIER}\n", mode: 'a')
+if APP_IDENTIFIER != "ru.artpancreas.#{TEAMID}.FreeAPS"
+  override_lines << "BUNDLE_IDENTIFIER = #{APP_IDENTIFIER}"
+end
+
+if TEAMID && !TEAMID.empty?
+  override_lines << "DEVELOPER_TEAM = #{TEAMID}"
+  override_lines << "APP_GROUP_ID = group.com.#{TEAMID}.loopkit.LoopGroup"
+end
+
+if override_lines.any?
+  File.write('../ConfigOverride.xcconfig', override_lines.join("\n") + "\n")
 end
 
 if File.exist?('../ConfigOverride.xcconfig')

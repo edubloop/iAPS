@@ -25,8 +25,8 @@
 | **2** | `TIRAnalysisDataFlow` — `runAnalysis(windowDays:)` protocol method | ✅ Complete |
 | **3** | Contributing factor population | ✅ Complete |
 | **4** | Settings audit — static analysis of `FreeAPSSettings` + `Preferences` | ✅ Complete |
-| **5** | SwiftUI summary screen + category detail screen | 🟡 In progress |
-| **5** | Settings audit screen | 🟡 In progress |
+| **5** | SwiftUI summary screen + category detail screen | ✅ Complete |
+| **5** | Settings audit screen | ✅ Complete |
 
 ---
 
@@ -43,8 +43,9 @@
 To avoid ambiguity between docs, data sources are split by execution context:
 
 - **Runtime in-app analysis (what ships in iAPS):**
-  - Glucose: HealthKit (`HKQuantityTypeIdentifier.bloodGlucose`)
-  - Carbs: HealthKit (`HKQuantityTypeIdentifier.dietaryCarbohydrates`), nullable if not authorized
+  - Glucose + carbs source: selectable (`Nightscout` or `HealthKit`) via TIR Insights config
+  - Default source: `Nightscout` (`tirDataSource = "nightscout"`)
+  - Nightscout path requires URL/API secret and `nightscoutFetchEnabled`; upload strongly recommended if no external uploader
   - Pump history / SMB evidence: iAPS file storage (`monitor/pumphistory*.json`, ~24 h)
   - IOB history: currently unavailable as rolling series; `CONSTRAINT_LIMITED` may downgrade/skip
 
@@ -115,7 +116,7 @@ enum TIRSettingsAuditor {
 ## Track 5 — SwiftUI UI
 
 ### Goal
-Usable summary flow with grouped pattern presentation, simulator controls, and clearer audit guidance.
+Usable summary flow with grouped pattern presentation, source selection, simulator controls, and clearer audit guidance.
 
 ### Views (3)
 1. **`TIRSummaryView`** — 7/14/30/90-day windows, TIR zone bar (very low/low/in-range/high/very high), grouped breakdown sections
@@ -124,8 +125,14 @@ Usable summary flow with grouped pattern presentation, simulator controls, and c
 
 ### Navigation
 - Entry point: row in existing Home → Statistics/Insights section; sheet presented; gated by `tirAnalysisEnabled`
-- Settings controls: single expandable **TIR Insights** entry under **Extra Features** (enable, simulator on/off, scenario picker)
+- Settings controls: **TIR Insights** drill-in screen under **Extra Features** (enable, data source, simulator on/off, scenario picker)
 - No new tab required
+
+### Current grouped presentation
+- **High Patterns:** Rebound High, Persistent Elevation, Rising Without Carbs, Max Insulin Limit
+- **Low Patterns:** Rebound Low, Persistent Low, Falling Without Active Insulin
+- **Data Quality:** Post Connectivity Gap
+- **Unclassified Outliers:** combined row with split metrics (`High x% • Low y%`)
 
 ### Files
 ```
@@ -160,7 +167,7 @@ Each track is independently committable.
 | `FreeAPS/Sources/Modules/TIRAnalysis/View/TIRRootView.swift` | Track 5 modal entry for TIR insights |
 | `FreeAPS/Sources/Modules/TIRAnalysis/View/TIRSummaryView.swift` | Track 5 summary + navigation |
 | `FreeAPS/Sources/Services/HealthKit/HealthKitManager.swift` | Existing write service — do NOT modify |
-| `FreeAPS/Sources/Models/FreeAPSSettings.swift` | `high`, `low`, `units`, `tirAnalysisEnabled`, simulator flags |
+| `FreeAPS/Sources/Models/FreeAPSSettings.swift` | `high`, `low`, `units`, `tirAnalysisEnabled`, simulator flags, `tirDataSource` |
 | `FreeAPS/Sources/Models/Preferences.swift` | `maxIOB`, `maxDeltaBGthreshold`, `sigmoid`, `autosensMax` |
 | `BuildTools/run_tir_tests.sh` | Run TIR engine tests via standalone Swift Package |
 | `BuildTools/add_tir_analysis_to_xcode.rb` | Register new files in Xcode project (idempotent) |

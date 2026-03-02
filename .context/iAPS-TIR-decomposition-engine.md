@@ -12,6 +12,30 @@ The TIR Decomposition Engine continuously analyzes your BG, insulin delivery, ca
 
 It does NOT auto-adjust anything. It reads data and produces insights.
 
+## 2.1 Current Implementation Snapshot (dev-ci-hardening)
+
+This spec is broader than current Phase 1A implementation. The following reflects what is currently shipped on `dev-ci-hardening`:
+
+- Data source is user-selectable in **Settings > Extra Features > TIR Insights**:
+  - `Nightscout` (default)
+  - `HealthKit`
+  - No auto/fallback mode.
+- Simulator mode and scenario picker are available in the same TIR Insights config screen.
+- Summary UI supports `7 / 14 / 30 / 90` day windows.
+- Summary includes a visual TIR band breakdown:
+  - Very Low, Low, In Range, High, Very High.
+- Event presentation is grouped as:
+  - **High Patterns**
+  - **Low Patterns**
+  - **Data Quality**
+  - **Unclassified Outliers**
+- Current label set in UI includes:
+  - `Max Insulin Limit` (display label for constraint-limited highs)
+  - `Falling Without Active Insulin` (low pattern)
+  - `Unclassified Outliers` with split metrics (`High x% • Low y%`).
+
+All recommendations remain advisory-only; no automatic dosing/settings changes are performed.
+
 ## 3. Available Inputs (Strict)
 The engine operates ONLY on data the algorithm already captures:
 
