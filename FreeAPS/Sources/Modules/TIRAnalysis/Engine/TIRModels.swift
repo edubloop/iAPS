@@ -25,7 +25,7 @@ enum TIREventConfidence: String, Codable {
 // MARK: - TIRContributingFactor
 
 /// Defined now so TIREvent is fully Codable.
-/// Track 1 always emits empty arrays; Track 2 populates instances.
+/// Populated when classifier evidence is available.
 struct TIRContributingFactor: Codable {
     let factor: String
     let evidence: String
@@ -51,7 +51,7 @@ struct TIREvent: Codable, Identifiable {
     let tirCost: Double
     let category: TIREventCategory
     let confidence: TIREventConfidence
-    /// Always empty in Track 1. Track 2 populates.
+    /// Populated by EventClassifier when supporting evidence is available.
     let contributingFactors: [TIRContributingFactor]
 
     enum CodingKeys: String, CodingKey {

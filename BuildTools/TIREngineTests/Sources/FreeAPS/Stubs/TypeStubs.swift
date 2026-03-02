@@ -136,3 +136,23 @@ public struct IOBTick0: Codable, Equatable {
         self.activity = activity
     }
 }
+
+// MARK: - FreeAPSSettings (stub — only fields used by TIRSettingsAuditor)
+
+public struct FreeAPSSettings: Codable {
+    public var minimumSMB: Decimal = 0.3
+    public init() {}
+}
+
+// MARK: - Preferences (stub — only fields used by TIRSettingsAuditor)
+
+public struct Preferences: Codable {
+    public var sigmoid: Bool = false
+    public var autosensMax: Decimal = 1.2
+    public var adjustmentFactor: Decimal = 0.5
+    public var enableUAM: Bool = false
+    public var maxDeltaBGthreshold: Decimal = 0.3
+    public var maxIOB: Decimal = 0
+    public var maxSMBBasalMinutes: Decimal = 30
+    public init() {}
+}

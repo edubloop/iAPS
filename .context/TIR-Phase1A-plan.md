@@ -23,8 +23,8 @@
 | **2** | `TIRAnalysisProvider` — DI wiring → `TIRAnalysisEngine.analyze()` | ✅ Complete |
 | **2** | `TIRAnalysisStateModel` — `@Published` results + `triggerAnalysis()` | ✅ Complete |
 | **2** | `TIRAnalysisDataFlow` — `runAnalysis(windowDays:)` protocol method | ✅ Complete |
-| **3** | Contributing factor population (currently always `[]`) | 🟡 In progress |
-| **4** | Settings audit — static analysis of `FreeAPSSettings` + `Preferences` | ❌ Not started |
+| **3** | Contributing factor population | ✅ Complete |
+| **4** | Settings audit — static analysis of `FreeAPSSettings` + `Preferences` | 🟡 In progress |
 | **5** | SwiftUI summary screen + category detail screen | ❌ Not started |
 | **5** | Settings audit screen | ❌ Not started |
 
@@ -60,12 +60,12 @@ This keeps runtime behavior deterministic and privacy-safe while allowing richer
 ## Track 3 — Contributing Factors
 
 ### Goal
-Populate `contributingFactors: [TIRContributingFactor]` in each `TIREvent` (currently always `[]`).
+Populate `contributingFactors: [TIRContributingFactor]` in each `TIREvent` when classifier evidence is available.
 
 ### Per-category factor evidence
 | Category | Factor text |
 |----------|------------|
-| `CONSTRAINT_LIMITED` | "IOB was at Xu (Max IOB Xu) for Y of Z minutes" |
+| `CONSTRAINT_LIMITED` | "IOB was at Xu (Max IOB Xu) for Y of Z buckets" |
 | `POST_CONNECTIVITY_GAP` | "CGM gap of N minutes ended Z minutes before event" |
 | `PERSISTENT_ELEVATION` | "N SMBs delivered (X.Xu total) — algorithm was responding" |
 | `REBOUND_HIGH` | "Low of Xmg/dL ended N minutes before this event" |
@@ -152,6 +152,7 @@ Each track is independently committable.
 | `FreeAPS/Sources/Modules/TIRAnalysis/Engine/TIRModels.swift` | All engine + result types |
 | `FreeAPS/Sources/Modules/TIRAnalysis/Engine/EventClassifier.swift` | Category + confidence; Track 3 adds factors |
 | `FreeAPS/Sources/Modules/TIRAnalysis/Engine/TIRAnalysisEngine.swift` | Orchestrator; Track 3 threads factors through |
+| `FreeAPS/Sources/Modules/TIRAnalysis/Engine/TIRSettingsAuditor.swift` | Static settings-risk checks for Track 4 |
 | `FreeAPS/Sources/Modules/TIRAnalysis/TIRHealthKitReader.swift` | HealthKit fetch layer (read-only) |
 | `FreeAPS/Sources/Modules/TIRAnalysis/TIRAnalysisProvider.swift` | Data fetch + engine call |
 | `FreeAPS/Sources/Modules/TIRAnalysis/TIRAnalysisStateModel.swift` | @Published state + triggerAnalysis() |

@@ -50,6 +50,7 @@ engine_files = %w[
   ThresholdCrossingDetector.swift
   EventClassifier.swift
   TIRAnalysisEngine.swift
+  TIRSettingsAuditor.swift
 ]
 
 new_app_refs = []
@@ -89,6 +90,7 @@ tir_tests_group = tests_group.find_subpath('TIRAnalysis') ||
 test_files = %w[
   TIRThresholdCrossingDetectorTests.swift
   TIRAnalysisEngineTests.swift
+  TIRSettingsAuditorTests.swift
 ]
 
 new_test_refs = []

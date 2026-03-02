@@ -84,6 +84,7 @@ class TIRAnalysisEngineTests: XCTestCase {
         let highEvent = events.first(where: { $0.type == "high" })!
         XCTAssertEqual(highEvent.category, .reboundHigh)
         XCTAssertEqual(highEvent.confidence, .high)
+        XCTAssertEqual(highEvent.contributingFactors.first?.factor, "Recent low before rebound")
     }
 
     // MARK: - TC-09: POST_CONNECTIVITY_GAP detection
@@ -103,6 +104,7 @@ class TIRAnalysisEngineTests: XCTestCase {
         let highEvent = events.first!
         XCTAssertEqual(highEvent.category, .postConnectivityGap)
         XCTAssertEqual(highEvent.confidence, .high)
+        XCTAssertEqual(highEvent.contributingFactors.first?.factor, "Recent CGM data gap")
     }
 
     // MARK: - TC-10: CONSTRAINT_LIMITED with IOB at ceiling
@@ -132,6 +134,7 @@ class TIRAnalysisEngineTests: XCTestCase {
         XCTAssertFalse(events.isEmpty)
         XCTAssertEqual(events[0].category, .constraintLimited)
         XCTAssertEqual(events[0].confidence, .high)
+        XCTAssertEqual(events[0].contributingFactors.first?.factor, "Max IOB ceiling reached")
     }
 
     // MARK: - TC-11: CONSTRAINT_LIMITED skipped when IOB is nil → falls through
@@ -209,6 +212,7 @@ class TIRAnalysisEngineTests: XCTestCase {
         XCTAssertFalse(events.isEmpty)
         XCTAssertEqual(events[0].category, .persistentElevation)
         XCTAssertEqual(events[0].confidence, .high)
+        XCTAssertEqual(events[0].contributingFactors.first?.factor, "Automated correction activity observed")
     }
 
     // MARK: - TC-15: UNCLASSIFIED_HIGH for short events

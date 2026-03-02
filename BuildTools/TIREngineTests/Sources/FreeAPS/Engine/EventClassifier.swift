@@ -42,7 +42,7 @@ enum EventClassifier {
 
     // MARK: - Public API
 
-    /// Returns (category, confidence) for a single segment.
+    /// Returns (category, confidence, factors) for a single segment.
     ///
     /// - Parameters:
     ///   - segment: The high-glucose event to classify.
@@ -50,66 +50,9 @@ enum EventClassifier {
     ///                 sorted chronologically. Used for REBOUND_HIGH look-back.
     ///   - carbEntries: Optional carb entries; nil means data unavailable.
     ///   - iobHistory: Optional IOB ticks; nil means CONSTRAINT_LIMITED is skipped.
+    ///   - pumpHistory: Optional pump events; used for PERSISTENT_ELEVATION SMB check.
     ///   - cgmGaps: Gap intervals from ThresholdCrossingDetector.
     ///   - configuration: Analysis configuration (thresholds, maxIOB, etc.).
-    static func classify(
-        segment: GlucoseSegment,
-        allGlucose: [BloodGlucose],
-        carbEntries: [CarbsEntry]?,
-        iobHistory: [IOBTick0]?,
-        cgmGaps: [DateInterval],
-        configuration: TIRAnalysisConfiguration
-    ) -> (category: TIREventCategory, confidence: TIREventConfidence) {
-        // Priority 1 — REBOUND_HIGH
-        if let reboundConfidence = checkReboundHigh(
-            segment: segment,
-            allGlucose: allGlucose,
-            lowThreshold: configuration.lowThresholdMgdL
-        ) {
-            return (.reboundHigh, reboundConfidence)
-        }
-
-        // Priority 2 — POST_CONNECTIVITY_GAP
-        if checkPostConnectivityGap(segment: segment, cgmGaps: cgmGaps) {
-            return (.postConnectivityGap, .high)
-        }
-
-        // Priority 3 — CONSTRAINT_LIMITED (skipped if no IOB data)
-        if let iob = iobHistory,
-           let constraintConfidence = checkConstraintLimited(
-               segment: segment,
-               iobHistory: iob,
-               maxIOB: configuration.maxIOB
-           )
-        {
-            return (.constraintLimited, constraintConfidence)
-        }
-
-        // Priority 4 — RISING_WITHOUT_CARBS
-        let (risingWithout, risingConfidence) = checkRisingWithoutCarbs(
-            segment: segment,
-            carbEntries: carbEntries
-        )
-        if risingWithout {
-            return (.risingWithoutCarbs, risingConfidence)
-        }
-
-        // Priority 5 — PERSISTENT_ELEVATION
-        let eventDuration = segment.end.timeIntervalSince(segment.start)
-        if eventDuration >= persistentElevationMinSeconds {
-            let persistentConfidence = checkPersistentElevation(
-                segment: segment,
-                pumpHistory: nil // pumpHistory passed in via engine; see Track 2
-            )
-            return (.persistentElevation, persistentConfidence)
-        }
-
-        // Priority 6 — catch-all
-        return (.unclassifiedHigh, .medium)
-    }
-
-    /// Variant that accepts pumpHistory for PERSISTENT_ELEVATION SMB check.
-    /// This is the canonical signature used by TIRAnalysisEngine.
     static func classify(
         segment: GlucoseSegment,
         allGlucose: [BloodGlucose],
@@ -118,30 +61,77 @@ enum EventClassifier {
         pumpHistory: [PumpHistoryEvent]?,
         cgmGaps: [DateInterval],
         configuration: TIRAnalysisConfiguration
-    ) -> (category: TIREventCategory, confidence: TIREventConfidence) {
+    ) -> (category: TIREventCategory, confidence: TIREventConfidence, factors: [TIRContributingFactor]) {
         // Priority 1 — REBOUND_HIGH
-        if let reboundConfidence = checkReboundHigh(
+        if let rebound = checkReboundHigh(
             segment: segment,
             allGlucose: allGlucose,
             lowThreshold: configuration.lowThresholdMgdL
         ) {
-            return (.reboundHigh, reboundConfidence)
+            return (
+                .reboundHigh,
+                rebound.confidence,
+                [
+                    TIRContributingFactor(
+                        factor: "Recent low before rebound",
+                        evidence: String(
+                            format: "Low of %.0f mg/dL ended %.0f minutes before this event",
+                            rebound.mostRecentLow,
+                            rebound.minutesToEvent
+                        ),
+                        actionable: true,
+                        suggestion: "Review low treatment amount and post-low follow-up strategy"
+                    )
+                ]
+            )
         }
 
         // Priority 2 — POST_CONNECTIVITY_GAP
-        if checkPostConnectivityGap(segment: segment, cgmGaps: cgmGaps) {
-            return (.postConnectivityGap, .high)
+        if let gap = checkPostConnectivityGap(segment: segment, cgmGaps: cgmGaps) {
+            return (
+                .postConnectivityGap,
+                .high,
+                [
+                    TIRContributingFactor(
+                        factor: "Recent CGM data gap",
+                        evidence: String(
+                            format: "CGM gap of %.0f minutes ended %.0f minutes before this event",
+                            gap.durationMinutes,
+                            gap.minutesToEvent
+                        ),
+                        actionable: true,
+                        suggestion: "Check CGM connectivity reliability and consider conservative post-gap decisions"
+                    )
+                ]
+            )
         }
 
         // Priority 3 — CONSTRAINT_LIMITED
         if let iob = iobHistory,
-           let constraintConfidence = checkConstraintLimited(
+           let constraint = checkConstraintLimited(
                segment: segment,
                iobHistory: iob,
                maxIOB: configuration.maxIOB
            )
         {
-            return (.constraintLimited, constraintConfidence)
+            return (
+                .constraintLimited,
+                constraint.confidence,
+                [
+                    TIRContributingFactor(
+                        factor: "Max IOB ceiling reached",
+                        evidence: String(
+                            format: "IOB was at %.1fU (Max IOB %.1fU) for %d of %d buckets",
+                            constraint.ceiling,
+                            configuration.maxIOB,
+                            constraint.atCeilingCount,
+                            constraint.matchedCount
+                        ),
+                        actionable: true,
+                        suggestion: "Review Max IOB in context of recent lows before any increase"
+                    )
+                ]
+            )
         }
 
         // Priority 4 — RISING_WITHOUT_CARBS
@@ -150,7 +140,7 @@ enum EventClassifier {
             carbEntries: carbEntries
         )
         if risingWithout {
-            return (.risingWithoutCarbs, risingConfidence)
+            return (.risingWithoutCarbs, risingConfidence, [])
         }
 
         // Priority 5 — PERSISTENT_ELEVATION
@@ -160,11 +150,15 @@ enum EventClassifier {
                 segment: segment,
                 pumpHistory: pumpHistory
             )
-            return (.persistentElevation, persistentConfidence)
+            var factors: [TIRContributingFactor] = []
+            if let factor = persistentElevationFactor(segment: segment, pumpHistory: pumpHistory) {
+                factors.append(factor)
+            }
+            return (.persistentElevation, persistentConfidence, factors)
         }
 
         // Priority 6 — catch-all
-        return (.unclassifiedHigh, .medium)
+        return (.unclassifiedHigh, .medium, [])
     }
 
     // MARK: - Individual category checks
@@ -175,7 +169,7 @@ enum EventClassifier {
         segment: GlucoseSegment,
         allGlucose: [BloodGlucose],
         lowThreshold: Double
-    ) -> TIREventConfidence? {
+    ) -> (confidence: TIREventConfidence, mostRecentLow: Double, minutesToEvent: Double)? {
         let lookbackStart = segment.start.addingTimeInterval(-reboundLookbackSeconds)
 
         let precedingLows = allGlucose.filter {
@@ -192,18 +186,32 @@ enum EventClassifier {
         guard gapToEvent <= reboundMaxLowToHighGapSeconds else { return nil }
 
         // Confidence: medium if only one low reading found (could be noise).
-        return precedingLows.count >= 2 ? .high : .medium
+        let confidence: TIREventConfidence = precedingLows.count >= 2 ? .high : .medium
+        return (
+            confidence,
+            Double(ThresholdCrossingDetector.sgvValue(mostRecentLow)),
+            gapToEvent / 60.0
+        )
     }
 
     /// POST_CONNECTIVITY_GAP: any CGM gap ended within 30 min before segment.start.
     static func checkPostConnectivityGap(
         segment: GlucoseSegment,
         cgmGaps: [DateInterval]
-    ) -> Bool {
+    ) -> (durationMinutes: Double, minutesToEvent: Double)? {
         let cutoff = segment.start.addingTimeInterval(-gapToEventWindowSeconds)
-        return cgmGaps.contains { gap in
+        let candidates = cgmGaps.filter { gap in
             gap.end >= cutoff && gap.end <= segment.start
         }
+        guard let nearest = candidates.min(by: {
+            abs($0.end.timeIntervalSince(segment.start)) < abs($1.end.timeIntervalSince(segment.start))
+        }) else {
+            return nil
+        }
+        return (
+            nearest.duration / 60.0,
+            segment.start.timeIntervalSince(nearest.end) / 60.0
+        )
     }
 
     /// CONSTRAINT_LIMITED: ≥50% of 5-min buckets during the event have IOB ≥ maxIOB * 0.95.
@@ -213,7 +221,7 @@ enum EventClassifier {
         segment: GlucoseSegment,
         iobHistory: [IOBTick0],
         maxIOB: Double
-    ) -> TIREventConfidence? {
+    ) -> (confidence: TIREventConfidence, atCeilingCount: Int, matchedCount: Int, ceiling: Double)? {
         guard maxIOB > 0 else { return nil }
 
         let ceiling = maxIOB * iobCeilingFraction
@@ -247,7 +255,7 @@ enum EventClassifier {
         let fraction = Double(atCeilingCount) / Double(matchedCount)
         guard fraction >= iobConstrainedFraction else { return nil }
 
-        return confidence
+        return (confidence, atCeilingCount, matchedCount, ceiling)
     }
 
     /// RISING_WITHOUT_CARBS: no real carb entry within 4 hr before segment.start.
@@ -293,5 +301,32 @@ enum EventClassifier {
             return isSmb && event.timestamp >= segment.start && event.timestamp <= segment.end
         }
         return hasSMB ? .high : .medium
+    }
+
+    static func persistentElevationFactor(
+        segment: GlucoseSegment,
+        pumpHistory: [PumpHistoryEvent]?
+    ) -> TIRContributingFactor? {
+        guard let history = pumpHistory else { return nil }
+        let smbEvents = history.filter { event in
+            let isSmb = event.isSMB == true || event.type == .smb
+            return isSmb && event.timestamp >= segment.start && event.timestamp <= segment.end
+        }
+        guard !smbEvents.isEmpty else { return nil }
+
+        let totalInsulin = smbEvents.reduce(0.0) { partial, event in
+            partial + NSDecimalNumber(decimal: event.amount ?? 0).doubleValue
+        }
+
+        return TIRContributingFactor(
+            factor: "Automated correction activity observed",
+            evidence: String(
+                format: "%d SMBs delivered (%.2fU total) during this event",
+                smbEvents.count,
+                totalInsulin
+            ),
+            actionable: false,
+            suggestion: nil
+        )
     }
 }

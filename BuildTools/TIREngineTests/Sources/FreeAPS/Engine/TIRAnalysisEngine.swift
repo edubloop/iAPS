@@ -47,7 +47,7 @@ enum TIRAnalysisEngine {
         var ordinalsByMinute: [String: Int] = [:]
 
         for segment in sortedSegments {
-            let (category, confidence) = EventClassifier.classify(
+            let (category, confidence, factors) = EventClassifier.classify(
                 segment: segment,
                 allGlucose: allSortedGlucose,
                 carbEntries: input.carbEntries,
@@ -76,7 +76,7 @@ enum TIRAnalysisEngine {
                 tirCost: tirCost,
                 category: category,
                 confidence: confidence,
-                contributingFactors: [] // Track 2 will populate
+                contributingFactors: factors
             )
             events.append(event)
         }
