@@ -23,7 +23,7 @@
 | **2** | `TIRAnalysisProvider` — DI wiring → `TIRAnalysisEngine.analyze()` | ✅ Complete |
 | **2** | `TIRAnalysisStateModel` — `@Published` results + `triggerAnalysis()` | ✅ Complete |
 | **2** | `TIRAnalysisDataFlow` — `runAnalysis(windowDays:)` protocol method | ✅ Complete |
-| **3** | Contributing factor population (currently always `[]`) | ❌ Not started |
+| **3** | Contributing factor population (currently always `[]`) | 🟡 In progress |
 | **4** | Settings audit — static analysis of `FreeAPSSettings` + `Preferences` | ❌ Not started |
 | **5** | SwiftUI summary screen + category detail screen | ❌ Not started |
 | **5** | Settings audit screen | ❌ Not started |
@@ -38,11 +38,22 @@
 - `PumpHistoryStorage.recent()` — 1 day (`monitor/pumphistory.json`)
 - IOB — **no rolling history at all**; only current snapshot (`monitor/iob.json`)
 
-Multi-day analysis (7/14/30 days) therefore uses **HealthKit** as the primary source:
-- Glucose → `HKQuantityTypeIdentifier.bloodGlucose` (entitlement + read permission already in place)
-- Carbs → `HKQuantityTypeIdentifier.dietaryCarbohydrates` (degrades gracefully to `nil` if not authorized)
-- Pump history → file storage, 24 h limit (acceptable for SMB factor detection)
-- IOB → unavailable historically; `CONSTRAINT_LIMITED` skipped (pass `nil`)
+### Runtime vs Offline Data Strategy (Unified)
+
+To avoid ambiguity between docs, data sources are split by execution context:
+
+- **Runtime in-app analysis (what ships in iAPS):**
+  - Glucose: HealthKit (`HKQuantityTypeIdentifier.bloodGlucose`)
+  - Carbs: HealthKit (`HKQuantityTypeIdentifier.dietaryCarbohydrates`), nullable if not authorized
+  - Pump history / SMB evidence: iAPS file storage (`monitor/pumphistory*.json`, ~24 h)
+  - IOB history: currently unavailable as rolling series; `CONSTRAINT_LIMITED` may downgrade/skip
+
+- **Offline validation and development analysis (what we run outside app):**
+  - Tidepool export (`TidepoolExport.json`) for long-range glucose + basal + bolus
+  - Apple Health export (`apple_health_export/export.xml`) for long-range glucose + carbs
+  - Local iAPS records (`monitor/`, `settings/`, `preferences.json`, `logs/`) for recent context
+
+This keeps runtime behavior deterministic and privacy-safe while allowing richer validation during development.
 
 ---
 
