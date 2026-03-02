@@ -5,21 +5,21 @@ import Foundation
 /// The classification of a high-glucose event for Phase 1A decomposition.
 /// Priority order matches EventClassifier strict precedence.
 enum TIREventCategory: String, Codable, CaseIterable {
-    case reboundHigh           = "REBOUND_HIGH"
-    case postConnectivityGap   = "POST_CONNECTIVITY_GAP"
-    case constraintLimited     = "CONSTRAINT_LIMITED"
-    case risingWithoutCarbs    = "RISING_WITHOUT_CARBS"
-    case persistentElevation   = "PERSISTENT_ELEVATION"
-    case unclassifiedHigh      = "UNCLASSIFIED_HIGH"
+    case reboundHigh = "REBOUND_HIGH"
+    case postConnectivityGap = "POST_CONNECTIVITY_GAP"
+    case constraintLimited = "CONSTRAINT_LIMITED"
+    case risingWithoutCarbs = "RISING_WITHOUT_CARBS"
+    case persistentElevation = "PERSISTENT_ELEVATION"
+    case unclassifiedHigh = "UNCLASSIFIED_HIGH"
     // Deferred to Track 2+: POST_MEAL_SPIKE and subcategories, LOW events
 }
 
 // MARK: - TIREventConfidence
 
 enum TIREventConfidence: String, Codable {
-    case high   = "high"
-    case medium = "medium"
-    case low    = "low"
+    case high
+    case medium
+    case low
 }
 
 // MARK: - TIRContributingFactor
@@ -55,11 +55,15 @@ struct TIREvent: Codable, Identifiable {
     let contributingFactors: [TIRContributingFactor]
 
     enum CodingKeys: String, CodingKey {
-        case id, start, end, type
-        case peakSeverity        = "peak_severity"
-        case durationMinutes     = "duration_minutes"
-        case tirCost             = "tir_cost"
-        case category, confidence
+        case id
+        case start
+        case end
+        case type
+        case peakSeverity = "peak_severity"
+        case durationMinutes = "duration_minutes"
+        case tirCost = "tir_cost"
+        case category
+        case confidence
         case contributingFactors = "contributing_factors"
     }
 }
@@ -135,16 +139,76 @@ struct TIRAnalysisInput {
     let glucose: [BloodGlucose]
 
     /// Optional carb entries for the analysis window.
-    /// From CarbsStorage.recent() in Track 2.
+    /// From HealthKit in Track 2.
     let carbEntries: [CarbsEntry]?
 
     /// Optional pump history for the analysis window.
-    /// From PumpHistoryStorage.recent() in Track 2.
+    /// From PumpHistoryStorage.recent() in Track 2 (24 h retention limit).
     let pumpHistory: [PumpHistoryEvent]?
 
     /// Optional IOB history ticks.
-    /// From CoreData insulin data in Track 2. Nil → CONSTRAINT_LIMITED not classified.
+    /// No rolling IOB history exists in iAPS; always nil in Track 2.
+    /// CONSTRAINT_LIMITED classification skipped when nil.
     let iobHistory: [IOBTick0]?
 
     let configuration: TIRAnalysisConfiguration
+}
+
+// MARK: - WindowCoverage
+
+/// Data availability report for the analysis window.
+/// Matches the canonical model in `.context/TIR-Phase1A-Track0.md`.
+struct WindowCoverage: Codable {
+    let windowDays: Int
+    let analysisEnd: Date
+    /// Number of blood glucose readings found in the window.
+    let glucoseRecordCount: Int
+    /// True if at least one carb entry was found in the window.
+    let carbDataAvailable: Bool
+    /// True if any pump history was available (file storage, 24 h window).
+    let pumpDataAvailable: Bool
+    /// Human-readable caveats for display and confidence downgrade explanations.
+    let caveats: [String]
+
+    /// Expected glucose record count for a fully-covered window (288 readings/day).
+    var expectedGlucoseCount: Int { windowDays * 288 }
+
+    /// Fraction of expected readings present. Capped at 1.0.
+    var glucoseCoverage: Double {
+        expectedGlucoseCount > 0
+            ? min(1.0, Double(glucoseRecordCount) / Double(expectedGlucoseCount))
+            : 0.0
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case windowDays = "window_days"
+        case analysisEnd = "analysis_end"
+        case glucoseRecordCount = "glucose_record_count"
+        case carbDataAvailable = "carb_data_available"
+        case pumpDataAvailable = "pump_data_available"
+        case caveats
+    }
+}
+
+// MARK: - TIRAnalysisResult
+
+/// Top-level output of a complete TIR analysis run.
+/// Wraps the classified event list with window coverage metadata.
+struct TIRAnalysisResult {
+    let events: [TIREvent]
+    let windowCoverage: WindowCoverage
+    let analysisDate: Date
+
+    /// Sum of tirCost across all events.
+    var totalTIRCost: Double {
+        events.map(\.tirCost).reduce(0, +)
+    }
+
+    func events(for category: TIREventCategory) -> [TIREvent] {
+        events.filter { $0.category == category }
+    }
+
+    func tirCost(for category: TIREventCategory) -> Double {
+        events(for: category).map(\.tirCost).reduce(0, +)
+    }
 }

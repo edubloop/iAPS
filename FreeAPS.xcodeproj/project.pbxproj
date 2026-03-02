@@ -304,6 +304,7 @@
 		38FEF3FC2737E53800574A46 /* MainStateModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38FEF3FB2737E53800574A46 /* MainStateModel.swift */; };
 		38FEF3FE2738083E00574A46 /* CGMProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38FEF3FD2738083E00574A46 /* CGMProvider.swift */; };
 		38FEF413273B317A00574A46 /* HKUnit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38FEF412273B317A00574A46 /* HKUnit.swift */; };
+		3D5B982B2CF430F2415A1135 /* TIRHealthKitReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8130E009162B306805F303D0 /* TIRHealthKitReader.swift */; };
 		401860FF3FB9F9DE08AB534E /* ThresholdCrossingDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39A957A5C987B5AF50123231 /* ThresholdCrossingDetector.swift */; };
 		44190F0BBA464D74B857D1FB /* PreferencesEditorRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A965332F237348B119FB858 /* PreferencesEditorRootView.swift */; };
 		448B6FCB252BD4796E2960C0 /* PumpSettingsEditorDataFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0274EE6439B1C3ED70730D41 /* PumpSettingsEditorDataFlow.swift */; };
@@ -982,6 +983,7 @@
 		751EEEDDA9852EF28D06AFA7 /* TIRAnalysisDataFlow.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TIRAnalysisDataFlow.swift; sourceTree = "<group>"; };
 		79BDA519C9B890FD9A5DFCF3 /* ISFEditorDataFlow.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ISFEditorDataFlow.swift; sourceTree = "<group>"; };
 		7E22146D3DF4853786C78132 /* CREditorDataFlow.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CREditorDataFlow.swift; sourceTree = "<group>"; };
+		8130E009162B306805F303D0 /* TIRHealthKitReader.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TIRHealthKitReader.swift; sourceTree = "<group>"; };
 		86FC1CFD647CF34508AF9A3B /* AddCarbsRootView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AddCarbsRootView.swift; sourceTree = "<group>"; };
 		8782B44544F38F2B2D82C38E /* NightscoutConfigRootView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NightscoutConfigRootView.swift; sourceTree = "<group>"; };
 		881E04BA5E0A003DE8E0A9C6 /* DataTableRootView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DataTableRootView.swift; sourceTree = "<group>"; };
@@ -2459,6 +2461,7 @@
 				751EEEDDA9852EF28D06AFA7 /* TIRAnalysisDataFlow.swift */,
 				726BFE20417F60ADB97E5297 /* TIRAnalysisProvider.swift */,
 				DDD30DB52662BCF4EDD29D2D /* TIRAnalysisStateModel.swift */,
+				8130E009162B306805F303D0 /* TIRHealthKitReader.swift */,
 			);
 			name = TIRAnalysis;
 			path = TIRAnalysis;
@@ -3547,6 +3550,7 @@
 				401860FF3FB9F9DE08AB534E /* ThresholdCrossingDetector.swift in Sources */,
 				1BCA335DBB5FD62628247AFD /* EventClassifier.swift in Sources */,
 				4EC2B22A691904F02F3C47B3 /* TIRAnalysisEngine.swift in Sources */,
+				3D5B982B2CF430F2415A1135 /* TIRHealthKitReader.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

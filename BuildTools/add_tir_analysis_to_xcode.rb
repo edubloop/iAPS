@@ -1,7 +1,8 @@
 #!/usr/bin/env ruby
 # BuildTools/add_tir_analysis_to_xcode.rb
 #
-# Adds Track 1 TIRAnalysis files to the Xcode project targets.
+# Adds TIRAnalysis files to the Xcode project targets (idempotent).
+# Updated for Track 2: includes TIRHealthKitReader.swift.
 # Run from any directory:
 #   ruby BuildTools/add_tir_analysis_to_xcode.rb
 #
@@ -35,11 +36,12 @@ tir_group = modules_group.find_subpath('TIRAnalysis') ||
 engine_group = tir_group.find_subpath('Engine') ||
                tir_group.new_group('Engine', 'Engine')
 
-# Module-level stubs
+# Module-level files (Track 1 stubs + Track 2 additions)
 module_stubs = %w[
   TIRAnalysisDataFlow.swift
   TIRAnalysisProvider.swift
   TIRAnalysisStateModel.swift
+  TIRHealthKitReader.swift
 ]
 
 # Engine files
