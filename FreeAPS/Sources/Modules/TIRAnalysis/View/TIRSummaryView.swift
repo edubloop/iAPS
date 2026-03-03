@@ -142,7 +142,7 @@ struct TIRSummaryView: View {
                 }
             }
         }
-        .onChange(of: state.windowDays) {
+        .onChange(of: state.windowDays) { _ in
             state.triggerAnalysis()
         }
         .onAppear {
