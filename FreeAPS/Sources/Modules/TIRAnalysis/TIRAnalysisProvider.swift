@@ -74,13 +74,22 @@ extension TIRAnalysis {
                     glucoseCoverage: coverage.glucoseCoverage
                 )
 
+                let simPatterns = TIREventCategory.allCases.map {
+                    TIRAnalysisResult(
+                        events: events, windowCoverage: coverage, analysisDate: now,
+                        rangeBreakdown: buildRangeBreakdown(glucose: simInput.glucose),
+                        readiness: readiness, recommendations: []
+                    ).pattern(for: $0)
+                }
+                let simRecommendations = TIRRecommendationEngine.recommend(patterns: simPatterns)
                 debug(.service, "TIR simulation complete: \(events.count) events, scenario \(scenario.rawValue)")
                 return TIRAnalysisResult(
                     events: events,
                     windowCoverage: coverage,
                     analysisDate: now,
                     rangeBreakdown: buildRangeBreakdown(glucose: simInput.glucose),
-                    readiness: readiness
+                    readiness: readiness,
+                    recommendations: simRecommendations
                 )
             }
 
@@ -167,7 +176,10 @@ extension TIRAnalysis {
             let patterns = TIREventCategory.allCases.map { partialResult.pattern(for: $0) }
             let recommendations = TIRRecommendationEngine.recommend(patterns: patterns)
 
-            debug(.service, "TIR analysis complete: \(events.count) events, coverage \(Int(coverage.glucoseCoverage * 100))%, \(recommendations.count) recommendations")
+            debug(
+                .service,
+                "TIR analysis complete: \(events.count) events, coverage \(Int(coverage.glucoseCoverage * 100))%, \(recommendations.count) recommendations"
+            )
             return TIRAnalysisResult(
                 events: events,
                 windowCoverage: coverage,
@@ -289,7 +301,8 @@ extension TIRAnalysis {
             let isSufficient = daysLeft == 0
             let message: String? = isSufficient
                 ? nil
-                : "Need \(daysLeft) more full \(daysLeft == 1 ? "day" : "days") for \(windowDays)-day insights (\(fullDays)/\(windowDays) full days available)."
+                :
+                "Need \(daysLeft) more full \(daysLeft == 1 ? "day" : "days") for \(windowDays)-day insights (\(fullDays)/\(windowDays) full days available)."
 
             return TIRReadiness(
                 windowDays: windowDays,

@@ -335,6 +335,7 @@
 		6BCF84DD2B16843A003AD46E /* LiveActitiyShared.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BCF84DC2B16843A003AD46E /* LiveActitiyShared.swift */; };
 		6BCF84DE2B16843A003AD46E /* LiveActitiyShared.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BCF84DC2B16843A003AD46E /* LiveActitiyShared.swift */; };
 		6C0C795B08603153A5AC6900 /* TIRSettingsAuditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6EA319A45F5CF30124A3339 /* TIRSettingsAuditor.swift */; };
+		384D6DC1C3E24B39A61F195E0C209C82 /* TIRRecommendationEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2947E17D36054CF99C375904B47FC957 /* TIRRecommendationEngine.swift */; };
 		6FFAE524D1D9C262F2407CAE /* SnoozeProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CAE81192B118804DCD23034 /* SnoozeProvider.swift */; };
 		711C0CB42CAABE788916BC9D /* ManualTempBasalDataFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96653287EDB276A111288305 /* ManualTempBasalDataFlow.swift */; };
 		72F1BD388F42FCA6C52E4500 /* ConfigEditorProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44080E4709E3AE4B73054563 /* ConfigEditorProvider.swift */; };
@@ -1031,6 +1032,7 @@
 		C19984D62EFC0035A9E9644D /* BolusProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BolusProvider.swift; sourceTree = "<group>"; };
 		C377490C77661D75E8C50649 /* ManualTempBasalRootView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ManualTempBasalRootView.swift; sourceTree = "<group>"; };
 		C6EA319A45F5CF30124A3339 /* TIRSettingsAuditor.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TIRSettingsAuditor.swift; sourceTree = "<group>"; };
+		2947E17D36054CF99C375904B47FC957 /* TIRRecommendationEngine.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TIRRecommendationEngine.swift; sourceTree = "<group>"; };
 		C8D1A7CA8C10C4403D4BBFA7 /* BolusDataFlow.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BolusDataFlow.swift; sourceTree = "<group>"; };
 		CC6C406D2ACDD69E009B8058 /* RawFetchedProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RawFetchedProfile.swift; sourceTree = "<group>"; };
 		CE1856F42ADC4858007E39C7 /* AddCarbPresetIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddCarbPresetIntent.swift; sourceTree = "<group>"; };
@@ -2596,6 +2598,7 @@
 				BB7D2EA0AAA44CB0B7753363 /* EventClassifier.swift */,
 				B3491ED1A6C2B5FD3A659D96 /* TIRAnalysisEngine.swift */,
 				C6EA319A45F5CF30124A3339 /* TIRSettingsAuditor.swift */,
+				2947E17D36054CF99C375904B47FC957 /* TIRRecommendationEngine.swift */,
 			);
 			name = Engine;
 			path = Engine;
@@ -3579,6 +3582,7 @@
 				4EC2B22A691904F02F3C47B3 /* TIRAnalysisEngine.swift in Sources */,
 				3D5B982B2CF430F2415A1135 /* TIRHealthKitReader.swift in Sources */,
 				6C0C795B08603153A5AC6900 /* TIRSettingsAuditor.swift in Sources */,
+				384D6DC1C3E24B39A61F195E0C209C82 /* TIRRecommendationEngine.swift in Sources */,
 				59C6BBBDA2BA27C0C626F25F /* TIRRootView.swift in Sources */,
 				E10F9F90C2CAA90A3224CBC3 /* TIRSummaryView.swift in Sources */,
 				AF2CB2F3517C448878C23F3D /* TIRCategoryDetailView.swift in Sources */,
