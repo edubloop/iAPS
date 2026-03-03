@@ -204,6 +204,7 @@ struct TIRAnalysisResult {
     let analysisDate: Date
     let rangeBreakdown: TIRRangeBreakdown
     let readiness: TIRReadiness
+    let recommendations: [TIRRecommendation]
 
     /// Sum of tirCost across all events.
     var totalTIRCost: Double {
@@ -216,6 +217,31 @@ struct TIRAnalysisResult {
 
     func tirCost(for category: TIREventCategory) -> Double {
         events(for: category).map(\.tirCost).reduce(0, +)
+    }
+
+    func pattern(for category: TIREventCategory) -> TIRCategoryPattern {
+        let categoryEvents = events(for: category)
+        let calendar = Calendar.current
+        var overnight = 0, morning = 0, afternoon = 0, evening = 0
+        for event in categoryEvents {
+            switch calendar.component(.hour, from: event.start) {
+            case 0 ..< 6: overnight += 1
+            case 6 ..< 12: morning += 1
+            case 12 ..< 18: afternoon += 1
+            default: evening += 1
+            }
+        }
+        let days = Set(categoryEvents.map { calendar.startOfDay(for: $0.start) })
+        return TIRCategoryPattern(
+            category: category,
+            eventCount: categoryEvents.count,
+            tirCost: tirCost(for: category),
+            timeOfDayBuckets: TimeOfDayBuckets(
+                overnight: overnight, morning: morning,
+                afternoon: afternoon, evening: evening
+            ),
+            recurrenceDays: days.count
+        )
     }
 }
 
@@ -249,4 +275,61 @@ struct TIRReadiness {
             message: nil
         )
     }
+}
+
+// MARK: - TimeOfDayBuckets
+
+/// Distribution of events across four 6-hour time-of-day periods.
+struct TimeOfDayBuckets {
+    let overnight: Int  // 00:00–06:00
+    let morning: Int    // 06:00–12:00
+    let afternoon: Int  // 12:00–18:00
+    let evening: Int    // 18:00–24:00
+
+    var total: Int { overnight + morning + afternoon + evening }
+
+    /// Label of the bucket with a majority share (≥50%), or nil when spread is even.
+    var dominantPeriod: String? {
+        let t = total
+        guard t > 0 else { return nil }
+        let buckets: [(String, Int)] = [
+            ("overnight", overnight),
+            ("morning", morning),
+            ("afternoon", afternoon),
+            ("evening", evening)
+        ]
+        guard let top = buckets.max(by: { $0.1 < $1.1 }), Double(top.1) / Double(t) >= 0.5 else { return nil }
+        return top.0
+    }
+}
+
+// MARK: - TIRCategoryPattern
+
+/// Per-category pattern summary: recurrence count and time-of-day distribution.
+struct TIRCategoryPattern {
+    let category: TIREventCategory
+    let eventCount: Int
+    let tirCost: Double
+    let timeOfDayBuckets: TimeOfDayBuckets
+    /// Distinct calendar days on which ≥1 event started.
+    let recurrenceDays: Int
+}
+
+// MARK: - TIRRecommendation
+
+enum RecommendationDepth {
+    /// Actionable, category-specific guidance.
+    case specific
+    /// Observational — surfaces signal without prescribing a setting change.
+    case observational
+}
+
+/// A single category-level recommendation surfaced when ≥3 events are confirmed.
+struct TIRRecommendation {
+    let category: TIREventCategory
+    /// One-line label for summary list row.
+    let headline: String
+    /// 1–2 sentence explanation shown in detail.
+    let detail: String
+    let depth: RecommendationDepth
 }

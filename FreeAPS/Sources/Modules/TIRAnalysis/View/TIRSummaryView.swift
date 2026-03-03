@@ -29,43 +29,26 @@ struct TIRSummaryView: View {
                 .disabled(state.isAnalyzing)
 
                 if let result = state.analysisResult {
-                    if result.readiness.isSufficient {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Time in Range")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                            Text(result.rangeBreakdown.inRange, format: .percent.precision(.fractionLength(1)))
-                                .font(.title2)
-                                .fontWeight(.bold)
-                            Text(
-                                "Estimated impacted by patterns: \(result.totalTIRCost, format: .percent.precision(.fractionLength(1)))"
-                            )
+                    VStack(alignment: .leading, spacing: 8) {
+                        coverageIndicator(result.readiness)
+                        Text("Time in Range")
                             .font(.caption)
                             .foregroundColor(.secondary)
-                            rangeBar(result.rangeBreakdown)
-                            rangeLegend(result.rangeBreakdown)
-                            Text("\(result.events.count) events • \(result.analysisDate, style: .date)")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                        .padding(.vertical, 4)
-                    } else {
-                        VStack(alignment: .leading, spacing: 10) {
-                            Text("Insufficient data")
-                                .font(.headline)
-                            Text(result.readiness.message ?? "More full days are needed before insights can be generated.")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                            ProgressView(
-                                value: Double(result.readiness.fullDaysAvailable),
-                                total: Double(result.readiness.requiredFullDays)
-                            )
-                            Text("\(result.readiness.fullDaysAvailable)/\(result.readiness.requiredFullDays) full days ready • \(result.readiness.daysLeft) day(s) left")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                        .padding(.vertical, 4)
+                        Text(result.rangeBreakdown.inRange, format: .percent.precision(.fractionLength(1)))
+                            .font(.title2)
+                            .fontWeight(.bold)
+                        Text(
+                            "Estimated impacted by patterns: \(result.totalTIRCost, format: .percent.precision(.fractionLength(1)))"
+                        )
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        rangeBar(result.rangeBreakdown)
+                        rangeLegend(result.rangeBreakdown)
+                        Text("\(result.events.count) events • \(result.analysisDate, style: .date)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                     }
+                    .padding(.vertical, 4)
                 }
             }
 
@@ -79,7 +62,7 @@ struct TIRSummaryView: View {
                 }
             }
 
-            if let result = state.analysisResult, result.readiness.isSufficient {
+            if let result = state.analysisResult {
                 Section("High Patterns") {
                     breakdownRow(result: result, category: .reboundHigh)
                     breakdownRow(result: result, category: .persistentElevation)
@@ -127,6 +110,30 @@ struct TIRSummaryView: View {
                 }
             }
 
+            if let result = state.analysisResult, !result.recommendations.isEmpty {
+                Section("Patterns & Suggestions") {
+                    ForEach(Array(result.recommendations.enumerated()), id: \.offset) { _, rec in
+                        NavigationLink {
+                            TIRCategoryDetailView(title: title(for: rec.category), events: result.events(for: rec.category))
+                        } label: {
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack(spacing: 6) {
+                                    Image(systemName: rec.depth == .specific ? "lightbulb.fill" : "info.circle")
+                                        .foregroundColor(rec.depth == .specific ? .orange : .secondary)
+                                        .font(.caption)
+                                    Text(rec.headline)
+                                        .fontWeight(.semibold)
+                                }
+                                Text(rec.detail)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding(.vertical, 2)
+                        }
+                    }
+                }
+            }
+
             if let audit = state.auditReport {
                 Section {
                     NavigationLink {
@@ -154,7 +161,39 @@ struct TIRSummaryView: View {
         }
     }
 
+    @ViewBuilder private func coverageIndicator(_ readiness: TIRReadiness) -> some View {
+        let available = readiness.fullDaysAvailable
+        let required = readiness.requiredFullDays
+        let fraction = required > 0 ? Double(available) / Double(required) : 1.0
+        VStack(alignment: .leading, spacing: 4) {
+            if required <= 14 {
+                HStack(spacing: 3) {
+                    ForEach(0 ..< required, id: \.self) { i in
+                        Circle()
+                            .fill(i < available ? Color.accentColor : Color.secondary.opacity(0.25))
+                            .frame(width: 8, height: 8)
+                    }
+                }
+            } else {
+                ProgressView(value: fraction)
+                    .frame(maxWidth: 160)
+            }
+            Text(coverageLabel(fraction: fraction, available: available, required: required))
+                .font(.caption)
+                .foregroundColor(fraction < 0.4 ? .orange : .secondary)
+        }
+    }
+
+    private func coverageLabel(fraction: Double, available: Int, required: Int) -> String {
+        let confidence: String
+        if fraction >= 0.8 { confidence = "High confidence" }
+        else if fraction >= 0.4 { confidence = "Medium confidence" }
+        else { confidence = "Low confidence" }
+        return "\(available)/\(required) days · \(confidence)"
+    }
+
     @ViewBuilder private func breakdownRow(result: TIRAnalysisResult, category: TIREventCategory) -> some View {
+        let pattern = result.pattern(for: category)
         NavigationLink {
             TIRCategoryDetailView(title: title(for: category), events: result.events(for: category))
         } label: {
@@ -166,12 +205,21 @@ struct TIRSummaryView: View {
                         .foregroundColor(.secondary)
                 }
                 ProgressView(value: result.tirCost(for: category), total: max(result.totalTIRCost, 0.0001))
-                Text("\(result.events(for: category).count) events")
+                Text(patternCaption(pattern))
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
             .padding(.vertical, 2)
         }
+    }
+
+    private func patternCaption(_ pattern: TIRCategoryPattern) -> String {
+        let count = pattern.eventCount
+        let base = "\(count) event\(count == 1 ? "" : "s")"
+        if let period = pattern.timeOfDayBuckets.dominantPeriod {
+            return "\(base) · mostly \(period)"
+        }
+        return base
     }
 
     @ViewBuilder private func rangeBar(_ range: TIRRangeBreakdown) -> some View {

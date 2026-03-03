@@ -126,26 +126,6 @@ extension TIRAnalysis {
                 windowDays: windowDays
             )
 
-            if !readiness.isSufficient {
-                let coverage = buildCoverage(
-                    glucose: glucose,
-                    carbEntries: carbEntries,
-                    pumpHistory: recentPump,
-                    windowDays: windowDays,
-                    windowEnd: windowEnd,
-                    extraCaveats: sourceCaveats + (readiness.message.map { [$0] } ?? []),
-                    source: source
-                )
-
-                return TIRAnalysisResult(
-                    events: [],
-                    windowCoverage: coverage,
-                    analysisDate: now,
-                    rangeBreakdown: buildRangeBreakdown(glucose: glucose),
-                    readiness: readiness
-                )
-            }
-
             // 5. Run engine. IOB history unavailable in iAPS (no rolling store).
             let input = TIRAnalysisInput(
                 glucose: glucose,
@@ -171,17 +151,30 @@ extension TIRAnalysis {
                 pumpHistory: recentPump,
                 windowDays: windowDays,
                 windowEnd: windowEnd,
-                extraCaveats: sourceCaveats,
+                extraCaveats: sourceCaveats + (readiness.message.map { [$0] } ?? []),
                 source: source
             )
 
-            debug(.service, "TIR analysis complete: \(events.count) events, coverage \(Int(coverage.glucoseCoverage * 100))%")
+            // 7. Build per-category patterns and derive recommendations.
+            let partialResult = TIRAnalysisResult(
+                events: events,
+                windowCoverage: coverage,
+                analysisDate: now,
+                rangeBreakdown: buildRangeBreakdown(glucose: glucose),
+                readiness: readiness,
+                recommendations: []
+            )
+            let patterns = TIREventCategory.allCases.map { partialResult.pattern(for: $0) }
+            let recommendations = TIRRecommendationEngine.recommend(patterns: patterns)
+
+            debug(.service, "TIR analysis complete: \(events.count) events, coverage \(Int(coverage.glucoseCoverage * 100))%, \(recommendations.count) recommendations")
             return TIRAnalysisResult(
                 events: events,
                 windowCoverage: coverage,
                 analysisDate: now,
                 rangeBreakdown: buildRangeBreakdown(glucose: glucose),
-                readiness: readiness
+                readiness: readiness,
+                recommendations: recommendations
             )
         }
 
