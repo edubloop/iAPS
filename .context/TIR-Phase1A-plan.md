@@ -27,6 +27,8 @@
 | **4** | Settings audit — static analysis of `FreeAPSSettings` + `Preferences` | ✅ Complete |
 | **5** | SwiftUI summary screen + category detail screen | ✅ Complete |
 | **5** | Settings audit screen | ✅ Complete |
+| **1B** | Coverage indicator + per-category pattern summaries | ✅ Complete |
+| **1B** | Recommendation engine + summary section | ✅ Complete |
 
 ---
 
@@ -136,18 +138,27 @@ Usable summary flow with grouped pattern presentation, source selection, simulat
 - **Unclassified Outliers:** combined row with split metrics (`High x% • Low y%`)
 
 ### Minimum data readiness gate
-- Insights are shown only when the selected window has enough **full days** of glucose data:
+- Readiness is computed from **full days** of glucose data for the selected window:
   - 7-day filter requires 7 full days
   - 14-day filter requires 14 full days
   - 30-day filter requires 30 full days
   - 90-day filter requires 90 full days
 - A day is counted as "full" when at least 70% of expected 5-minute readings are present.
-- When insufficient, summary shows a friendly blocked state with:
+- Summary shows a friendly readiness indicator with:
   - days available vs required,
-  - days left,
-  - progress bar,
-  - no pattern insights/breakdown links.
+  - confidence label,
+  - dot/progress visualization.
 - Simulator mode bypasses the readiness gate.
+
+### Phase 1B additions (current)
+- `TIRAnalysisResult` now includes:
+  - `recommendations: [TIRRecommendation]`
+  - per-category `pattern(for:)` aggregation (`TIRCategoryPattern`, `TimeOfDayBuckets`)
+- New pure engine:
+  - `TIRRecommendationEngine` (thresholded recommendations, currently `>=3` events)
+- Summary UI additions:
+  - coverage/readiness indicator at top
+  - `Patterns & Suggestions` section surfaced from recommendation engine output
 
 ### Files
 ```
@@ -181,6 +192,7 @@ Each track is independently committable.
 | `FreeAPS/Sources/Modules/TIRAnalysis/TIRAnalysisStateModel.swift` | @Published state + triggerAnalysis() |
 | `FreeAPS/Sources/Modules/TIRAnalysis/View/TIRRootView.swift` | Track 5 modal entry for TIR insights |
 | `FreeAPS/Sources/Modules/TIRAnalysis/View/TIRSummaryView.swift` | Track 5 summary + navigation |
+| `FreeAPS/Sources/Modules/TIRAnalysis/Engine/TIRRecommendationEngine.swift` | Phase 1B recommendation generation |
 | `FreeAPS/Sources/Services/HealthKit/HealthKitManager.swift` | Existing write service — do NOT modify |
 | `FreeAPS/Sources/Models/FreeAPSSettings.swift` | `high`, `low`, `units`, `tirAnalysisEnabled`, simulator flags, `tirDataSource` |
 | `FreeAPS/Sources/Models/Preferences.swift` | `maxIOB`, `maxDeltaBGthreshold`, `sigmoid`, `autosensMax` |

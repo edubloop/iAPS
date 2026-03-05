@@ -281,10 +281,10 @@ struct TIRReadiness {
 
 /// Distribution of events across four 6-hour time-of-day periods.
 struct TimeOfDayBuckets {
-    let overnight: Int  // 00:00–06:00
-    let morning: Int    // 06:00–12:00
-    let afternoon: Int  // 12:00–18:00
-    let evening: Int    // 18:00–24:00
+    let overnight: Int // 00:00–06:00
+    let morning: Int // 06:00–12:00
+    let afternoon: Int // 12:00–18:00
+    let evening: Int // 18:00–24:00
 
     var total: Int { overnight + morning + afternoon + evening }
 

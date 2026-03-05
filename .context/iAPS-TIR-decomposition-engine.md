@@ -28,7 +28,7 @@ This spec is broader than current Phase 1A implementation. The following reflect
   - `30d` requires 30 full days
   - `90d` requires 90 full days
   - A "full day" is >=70% of expected 5-minute glucose points.
-  - If insufficient, UI shows days left and blocks pattern insights until ready.
+  - UI currently shows readiness/confidence indicator and day-progress; insights are still rendered.
   - Simulator mode bypasses this gate.
 - Summary includes a visual TIR band breakdown:
   - Very Low, Low, In Range, High, Very High.
@@ -41,6 +41,10 @@ This spec is broader than current Phase 1A implementation. The following reflect
   - `Max Insulin Limit` (display label for constraint-limited highs)
   - `Falling Without Active Insulin` (low pattern)
   - `Unclassified Outliers` with split metrics (`High x% • Low y%`).
+- Current recommendation pipeline:
+  - Category patterns are aggregated via time-of-day buckets.
+  - `TIRRecommendationEngine` emits recommendation rows for recurring patterns (current threshold: `>=3` events).
+  - Summary surfaces these in `Patterns & Suggestions`.
 
 All recommendations remain advisory-only; no automatic dosing/settings changes are performed.
 
