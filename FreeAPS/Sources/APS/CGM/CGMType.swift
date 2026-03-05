@@ -42,28 +42,28 @@ enum CGMType: String, JSON, CaseIterable, Identifiable {
              .nightscout:
             return nil
         case .xdrip:
-            return URL(string: "xdripswift://")!
+            return CGMExternalAppURLs.xdripApp
         case .glucoseDirect:
-            return URL(string: "libredirect://")!
+            return CGMExternalAppURLs.glucoseDirectApp
         case .dexcomG5:
-            return URL(string: "dexcomgcgm://")!
+            return CGMExternalAppURLs.dexcomG5App
         case .dexcomG6:
-            return URL(string: "dexcomg6://")!
+            return CGMExternalAppURLs.dexcomG6App
         case .dexcomG7:
-            return URL(string: "dexcomg7://")!
+            return CGMExternalAppURLs.dexcomG7App
         case .simulator:
             return nil
         case .libreTransmitter:
-            return URL(string: "freeaps-x://libre-transmitter")!
+            return CGMExternalAppURLs.libreTransmitterApp
         }
     }
 
     var externalLink: URL? {
         switch self {
         case .xdrip:
-            return URL(string: "https://github.com/JohanDegraeve/xdripswift")!
+            return CGMExternalAppURLs.xdripExternalLink
         case .glucoseDirect:
-            return URL(string: "https://github.com/creepymonster/GlucoseDirectApp")!
+            return CGMExternalAppURLs.glucoseDirectExternalLink
         default: return nil
         }
     }
@@ -101,7 +101,7 @@ enum CGMType: String, JSON, CaseIterable, Identifiable {
     }
 
     var expiration: TimeInterval {
-        let secondsOfDay = 8.64E4
+        let secondsOfDay = CGMConstants.secondsPerDay
         switch self {
         case .dexcomG6:
             return 10 * secondsOfDay
@@ -115,6 +115,22 @@ enum CGMType: String, JSON, CaseIterable, Identifiable {
             return 10 * secondsOfDay
         }
     }
+}
+
+enum CGMExternalAppURLs {
+    static let xdripApp = URL(string: "xdripswift://")!
+    static let glucoseDirectApp = URL(string: "libredirect://")!
+    static let dexcomG5App = URL(string: "dexcomgcgm://")!
+    static let dexcomG6App = URL(string: "dexcomg6://")!
+    static let dexcomG7App = URL(string: "dexcomg7://")!
+    static let libreTransmitterApp = URL(string: "freeaps-x://libre-transmitter")!
+
+    static let xdripExternalLink = URL(string: "https://github.com/JohanDegraeve/xdripswift")!
+    static let glucoseDirectExternalLink = URL(string: "https://github.com/creepymonster/GlucoseDirectApp")!
+}
+
+enum CGMConstants {
+    static let secondsPerDay: TimeInterval = 86400
 }
 
 enum GlucoseDataError: Error {

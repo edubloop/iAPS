@@ -65,7 +65,7 @@ final class CoreDataStorage {
             deleteRequest.predicate = NSPredicate(
                 format: "date >= %@ OR date < %@",
                 firstDate.addingTimeInterval(-60) as NSDate, // delete previous "future" entries
-                firstDate.addingTimeInterval(-86400) as NSDate // delete entries older than 1 day
+                firstDate.addingTimeInterval(-1.days.timeInterval) as NSDate // delete entries older than 1 day
             )
             do {
                 let recordsToDelete = try self.coredataContext.fetch(deleteRequest)

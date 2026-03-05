@@ -956,7 +956,7 @@ final class BaseAPSManager: APSManager, Injectable {
         // Last date (recent)
         let first = glucose.first?.date ?? Date()
         // Total time in days
-        let numberOfDays = (first - last).timeInterval / 8.64E4
+        let numberOfDays = (first - last).timeInterval / 1.days.timeInterval
         let denominator = numberOfDays < 1 ? 1 : numberOfDays
         let justGlucoseArray = glucose.compactMap({ each in Int(each.glucose as Int16) })
         let sumReadings = justGlucoseArray.reduce(0, +)
@@ -1003,7 +1003,7 @@ final class BaseAPSManager: APSManager, Injectable {
         // Last date (recent)
         let current = loops.first?.start ?? Date()
         // Total time in days
-        let totalTime = (current - previous).timeInterval / 8.64E4
+        let totalTime = (current - previous).timeInterval / 1.days.timeInterval
         //
         let durationArray = loops.compactMap({ each in each.duration })
         let durationArrayCount = durationArray.count
@@ -1119,7 +1119,7 @@ final class BaseAPSManager: APSManager, Injectable {
             // Last date (recent)
             let current = glucose.first?.date ?? Date()
             // Total time in days
-            let numberOfDays = (current - previous).timeInterval / 8.64E4
+            let numberOfDays = (current - previous).timeInterval / 1.days.timeInterval
 
             // Get glucose computations for every case
             let oneDayGlucose = glucoseStats(glucose_24)

@@ -96,6 +96,8 @@ struct GlucoseSegment {
 /// Plain value type — no DI coupling, no UIKit/SwiftUI imports.
 /// The caller (Provider in Track 2, or test harness) constructs and passes this in.
 struct TIRAnalysisConfiguration {
+    private static let secondsPerDay: TimeInterval = 24 * 60 * 60
+
     /// Upper in-range threshold in mg/dL.
     /// Note: FreeAPSSettings.high is stored in mg/dL regardless of display units.
     let highThresholdMgdL: Double
@@ -127,7 +129,7 @@ struct TIRAnalysisConfiguration {
             highThresholdMgdL: highMgdL,
             lowThresholdMgdL: lowMgdL,
             maxIOB: maxIOB,
-            windowStart: windowEnd.addingTimeInterval(TimeInterval(-windowDays * 86400)),
+            windowStart: windowEnd.addingTimeInterval(TimeInterval(-windowDays) * secondsPerDay),
             windowEnd: windowEnd,
             units: units
         )

@@ -171,18 +171,18 @@ enum AppGroupSourceType: String, JSON, CaseIterable, Identifiable {
     var appURL: URL? {
         switch self {
         case .xdrip:
-            return URL(string: "xdripswift://")!
+            return CGMExternalAppURLs.xdripApp
         case .glucoseDirect:
-            return URL(string: "libredirect://")!
+            return CGMExternalAppURLs.glucoseDirectApp
         }
     }
 
     var externalLink: URL? {
         switch self {
         case .xdrip:
-            return URL(string: "https://github.com/JohanDegraeve/xdripswift")!
+            return CGMExternalAppURLs.xdripExternalLink
         case .glucoseDirect:
-            return URL(string: "https://github.com/creepymonster/GlucoseDirectApp")!
+            return CGMExternalAppURLs.glucoseDirectExternalLink
         }
     }
 

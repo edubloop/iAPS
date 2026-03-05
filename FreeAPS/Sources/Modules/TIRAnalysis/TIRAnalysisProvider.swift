@@ -13,6 +13,10 @@ extension TIRAnalysis {
         @Injected() var nightscoutManager: NightscoutManager!
 
         private let hkReader = TIRHealthKitReader()
+        private enum Config {
+            static let secondsPerDay: TimeInterval = 24 * 60 * 60
+        }
+
         private enum TIRDataSource: String {
             case nightscout
             case healthkit
@@ -30,7 +34,7 @@ extension TIRAnalysis {
         func runAnalysis(windowDays: Int) async -> TIRAnalysisResult {
             let now = Date()
             let windowEnd = now
-            let windowStart = windowEnd.addingTimeInterval(TimeInterval(-windowDays) * 86400)
+            let windowStart = windowEnd.addingTimeInterval(TimeInterval(-windowDays) * Config.secondsPerDay)
 
             // 1. Build configuration from live settings.
             let settings = settingsManager.settings

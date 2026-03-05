@@ -21,8 +21,9 @@
 
 ## Deep-link and external app URL sources
 
-- CGM URL schemes: `FreeAPS/Sources/APS/CGM/CGMType.swift`
-- Plugin-specific URL mappings: `FreeAPS/Sources/APS/KnownPlugins.swift`
+- Canonical app/deep-link URL constants: `FreeAPS/Sources/APS/CGM/CGMType.swift` (`CGMExternalAppURLs`)
+- Plugin-specific URL mappings consume canonical constants: `FreeAPS/Sources/APS/KnownPlugins.swift`
+- AppGroup source mappings consume canonical constants: `FreeAPS/Sources/APS/CGM/AppGroupCGM/AppGroupSource.swift`
 - Nightscout remote CGM localhost mapping: `NightscoutRemoteCGM/NightscoutRemoteCGM/NightscoutRemoteCGM.swift`
 - Dexcom Share servers and paths: `dexcom-share-client-swift/ShareClient/ShareClient.swift`
 
@@ -45,14 +46,13 @@
 
 - Timeout/retry literals (`60`, `2`) repeated outside network services
 - Duplicated API paths like `/api/v1/profile.json`
-- Repeated deep-link strings across `CGMType` and plugin helpers
+- Repeated deep-link strings outside `CGMExternalAppURLs`
 
-## Current non-centralized callsite to watch
+## Recently consolidated
 
-- `NightscoutConfigStateModel.importSettings()` currently inlines:
-  - `path = "/api/v1/profile.json"`
-  - `timeout: TimeInterval = 60`
-  This should stay in sync with `NightscoutAPI.Config` until consolidated.
+- `NightscoutConfigStateModel.importSettings()` now uses:
+  - `NightscoutAPI.Config.profilePath`
+  - `NightscoutAPI.Config.timeout`
 
 ## Structural checks
 

@@ -24,10 +24,12 @@ Track high-impact constants and identify what is centralized vs scattered.
   - `ThresholdCrossingDetector`: CGM gap `10m`, consolidation `15m`
   - `EventClassifier`: rebound windows `60m`, post-gap window `30m`, carb lookback `4h`, persistent elevation minimum `3h`
   - `TIRRecommendationEngine`: recurrence threshold `3`
+- CGM lifecycle constants:
+  - `CGMConstants.secondsPerDay = 86_400` in `FreeAPS/Sources/APS/CGM/CGMType.swift`
 
 ## Scattered patterns to monitor
 
-- Day-in-seconds represented as `86400` and `8.64E4` in multiple modules
+- Day-in-seconds literals (`86400`, `8.64E4`) in app code (should be treated as regressions)
 - 5-minute and 15-minute windows encoded inline in providers/views/services
 - Inline timeout/retry and API path literals outside network config
 - View spacing/frame literals repeated heavily in module views
@@ -35,7 +37,7 @@ Track high-impact constants and identify what is centralized vs scattered.
 
 ## Known scattered examples (current)
 
-- Day literals (`86400`, `8.64E4`) across APS, TIR provider/models, stats, CGM type, UI widgets.
+- Day literals (`86400`, `8.64E4`) have been removed from `FreeAPS/Sources` and are now blocked by structural tests.
 - Inlined TIR thresholds in provider range breakdown/readiness:
   - `<54`, `54-69`, `70-180`, `181-250`, `>250`
   - full-day readiness threshold `70%` of 288 expected points/day
@@ -44,7 +46,7 @@ Track high-impact constants and identify what is centralized vs scattered.
 
 ## Structural checks
 
-- `StructuralConventionsTests.test_secondsPerDayLiteralsScopedToAllowlist` protects against new raw day literals outside current allowlist.
+- `StructuralConventionsTests.test_secondsPerDayLiteralsScopedToAllowlist` now enforces zero raw day literals in `FreeAPS/Sources`.
 
 ## Rule of thumb
 

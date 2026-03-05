@@ -25,7 +25,7 @@ enum KnownPlugins {
 
     static func cgmExpirationByPluginIdentifier(_ cgmManager: CGMManager?) -> TimeInterval? {
         guard let cgmManager else { return nil }
-        let secondsOfDay = 8.64E4
+        let secondsOfDay = CGMConstants.secondsPerDay
 
         return switch cgmManager.pluginIdentifier {
         case G6CGMManager.pluginIdentifier: 10 * secondsOfDay
@@ -54,11 +54,11 @@ enum KnownPlugins {
     static func appURLByPluginIdentifier(pluginIdentifier: String) -> URL? {
         switch pluginIdentifier {
         case G5CGMManager.pluginIdentifier:
-            URL(string: "dexcomgcgm://")!
+            CGMExternalAppURLs.dexcomG5App
         case G6CGMManager.pluginIdentifier:
-            URL(string: "dexcomg6://")!
+            CGMExternalAppURLs.dexcomG6App
         case G7CGMManager.pluginIdentifier:
-            URL(string: "dexcomg7://")!
+            CGMExternalAppURLs.dexcomG7App
         default: nil
         }
     }

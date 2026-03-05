@@ -143,12 +143,13 @@ struct CurrentGlucoseView: View {
             if let date = recentGlucose?.sessionStartDate {
                 let sensorAge: TimeInterval = (-1 * date.timeIntervalSinceNow)
                 let expiration = sensordays - sensorAge
-                let secondsOfDay = 8.64E4
+                let secondsOfDay: TimeInterval = 24 * 60 * 60
                 let colour = colorScheme == .light ? Color.black : Color.white
                 let lineColour: Color = sensorAge >= sensordays - secondsOfDay * 1 ? Color.red
                     .opacity(0.9) : sensorAge >= sensordays - secondsOfDay * 2 ? Color
                     .orange : Color.white
-                let minutesAndHours = (displayExpiration && expiration < 1 * 8.64E4) || (displaySAGE && sensorAge < 1 * 8.64E4)
+                let minutesAndHours = (displayExpiration && expiration < secondsOfDay) ||
+                    (displaySAGE && sensorAge < secondsOfDay)
 
                 Sage(amount: sensorAge, expiration: expiration, lineColour: lineColour, sensordays: sensordays)
                     .frame(width: 36, height: 36)

@@ -10,7 +10,7 @@ class NightscoutAPI {
         self.secret = secret?.nonEmpty
     }
 
-    private enum Config {
+    enum Config {
         static let entriesPath = "/api/v1/entries/sgv.json"
         static let uploadEntriesPath = "/api/v1/entries.json"
         static let treatmentsPath = "/api/v1/treatments.json"

@@ -54,7 +54,7 @@ struct StatsView: View {
         // First loop date
         let previous = (loops.last?.start ?? Date.now).addingTimeInterval(-5.minutes.timeInterval)
         // Time in days
-        let days = -1 * previous.timeIntervalSinceNow / 8.64E4
+        let days = -1 * previous.timeIntervalSinceNow / 1.days.timeInterval
         // Calculations
         let durationArray = loops.compactMap({ each in each.duration })
         let medianDuration = medianCalculationDouble(array: durationArray)
@@ -187,7 +187,7 @@ struct StatsView: View {
             // First date
             let previous = glucose.last?.date ?? Date()
             // Days
-            let numberOfDays = -1 * previous.timeIntervalSinceNow / 8.64E4
+            let numberOfDays = -1 * previous.timeIntervalSinceNow / 1.days.timeInterval
 
             let hba1cString = (
                 useUnit == .mmolL ? hba1cs.ifcc
@@ -228,7 +228,7 @@ struct StatsView: View {
             // First date
             let previous = glucose.last?.date ?? Date()
             // Last date (recent)
-            let numberOfDays = -1 * previous.timeIntervalSinceNow / 8.64E4
+            let numberOfDays = -1 * previous.timeIntervalSinceNow / 1.days.timeInterval
 
             VStack(spacing: 5) {
                 Text(numberOfDays < 1 ? "Readings" : "Readings / 24h").font(.subheadline)
@@ -267,7 +267,7 @@ struct StatsView: View {
         // Last date (recent)
         let current = glucose.first?.date ?? Date()
         // Total time in days
-        let numberOfDays = (current - previous).timeInterval / 8.64E4
+        let numberOfDays = (current - previous).timeInterval / 1.days.timeInterval
 
         let denominator = numberOfDays < 1 ? 1 : numberOfDays
 

@@ -4,7 +4,7 @@ import XCTest
 final class StructuralConventionsTests: XCTestCase {
     private var repoRoot: URL {
         var url = URL(fileURLWithPath: #filePath)
-        for _ in 0 ..< 5 {
+        for _ in 0 ..< 4 {
             url.deleteLastPathComponent()
         }
         return url
@@ -33,18 +33,7 @@ final class StructuralConventionsTests: XCTestCase {
     }
 
     func test_secondsPerDayLiteralsScopedToAllowlist() throws {
-        let allowlist: Set<String> = [
-            "FreeAPS/Sources/APS/APSManager.swift",
-            "FreeAPS/Sources/APS/CGM/CGMType.swift",
-            "FreeAPS/Sources/APS/KnownPlugins.swift",
-            "FreeAPS/Sources/APS/Storage/CoreDataStorage.swift",
-            "FreeAPS/Sources/Modules/Dynamic/DynamicStateModel.swift",
-            "FreeAPS/Sources/Modules/Home/View/Header/CurrentGlucoseView.swift",
-            "FreeAPS/Sources/Modules/Stat/View/StatsView.swift",
-            "FreeAPS/Sources/Modules/TIRAnalysis/Engine/TIRModels.swift",
-            "FreeAPS/Sources/Modules/TIRAnalysis/TIRAnalysisProvider.swift",
-            "FreeAPS/Sources/Views/ViewModifiers.swift"
-        ]
+        let allowlist: Set<String> = []
 
         let files = try swiftFiles(under: "FreeAPS/Sources")
         var violations: [String] = []
@@ -67,7 +56,6 @@ final class StructuralConventionsTests: XCTestCase {
     func test_nightscoutProfileEndpointLiteralScopedToAllowlist() throws {
         let endpointLiteral = "/api/v1/profile.json"
         let allowlist: Set<String> = [
-            "FreeAPS/Sources/Modules/NightscoutConfig/NightscoutConfigStateModel.swift",
             "FreeAPS/Sources/Services/Network/NightscoutAPI.swift"
         ]
 
@@ -99,9 +87,7 @@ final class StructuralConventionsTests: XCTestCase {
         ]
 
         let allowlist: Set<String> = [
-            "FreeAPS/Sources/APS/CGM/AppGroupCGM/AppGroupSource.swift",
-            "FreeAPS/Sources/APS/CGM/CGMType.swift",
-            "FreeAPS/Sources/APS/KnownPlugins.swift"
+            "FreeAPS/Sources/APS/CGM/CGMType.swift"
         ]
 
         let files = try swiftFiles(under: "FreeAPS/Sources")
