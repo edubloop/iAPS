@@ -130,7 +130,7 @@ enum CGMExternalAppURLs {
 }
 
 enum CGMConstants {
-    static let secondsPerDay: TimeInterval = 86400
+    static let secondsPerDay: TimeInterval = 86_400
 }
 
 enum GlucoseDataError: Error {

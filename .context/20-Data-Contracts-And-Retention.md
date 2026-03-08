@@ -25,7 +25,7 @@
 - CGM state treatments are retained ~30 days for sensor-session context (`GlucoseStorage`, `monitor/cgm-state.json`).
 - CoreData insulin activity cleanup uses two windows in `CoreDataStorage.saveInsulinData`:
   - delete future artifacts from `firstDate - 60s`
-  - delete entries older than 1 day (`firstDate - 86400s`)
+  - delete entries older than 1 day (`firstDate - 1.days.timeInterval`)
 
 ## Invariants to preserve
 

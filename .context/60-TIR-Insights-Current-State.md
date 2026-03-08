@@ -14,7 +14,7 @@ Tracks current implementation state of TIR analysis and recommendation behavior.
 
 ## Current thresholds and assumptions in provider path
 
-- Analysis window start uses `windowDays * 86400` seconds.
+- Analysis window start uses a named constant (`Provider.Config.secondsPerDay`) multiplied by `windowDays`.
 - Coverage expected count assumes `288` readings/day (5-minute cadence).
 - Full day threshold is `70%` of expected readings.
 - Range breakdown buckets currently use:

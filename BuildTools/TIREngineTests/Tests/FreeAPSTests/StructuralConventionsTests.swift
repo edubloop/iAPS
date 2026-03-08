@@ -4,7 +4,7 @@ import XCTest
 final class StructuralConventionsTests: XCTestCase {
     private var repoRoot: URL {
         var url = URL(fileURLWithPath: #filePath)
-        for _ in 0 ..< 4 {
+        for _ in 0 ..< 5 {
             url.deleteLastPathComponent()
         }
         return url
