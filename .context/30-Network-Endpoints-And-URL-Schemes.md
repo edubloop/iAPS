@@ -48,11 +48,25 @@
 - Duplicated API paths like `/api/v1/profile.json`
 - Repeated deep-link strings outside `CGMExternalAppURLs`
 
+## Request builder (NightscoutAPI)
+
+- All `NightscoutAPI` endpoint methods use a private `makeRequest(baseURL:path:queryItems:method:constrainedNetwork:addSecret:)` helper.
+- The builder centralizes: `URLComponents` construction, `timeoutInterval`, `allowsConstrainedNetworkAccess`, and `api-secret` header injection.
+- Methods that use the iAPS stats backend (`uploadStats`, `uploadPrefs`, `uploadSettings`, `uploadSettingsToDatabase`, `fetchVersion`) pass `baseURL: IAPSconfig.statURL` and `addSecret: false`.
+- Methods return `missingURLPublisher()` (a `Fail<T, NightscoutAPI.Error.missingURL>`) if the builder cannot produce a valid URL.
+- Force-unwraps (`url!`) and most `try!` JSON encoding calls have been eliminated; encoding failures map to `nil` body (the upload will be rejected by the server, not crash the app).
+
 ## Recently consolidated
 
 - `NightscoutConfigStateModel.importSettings()` now uses:
   - `NightscoutAPI.Config.profilePath`
   - `NightscoutAPI.Config.timeout`
+
+## Treatment fetch count
+
+- `NightscoutAPI.fetchTreatments(sinceDate:untilDate:count:)` accepts a `count` parameter (default 500).
+- `NightscoutManager.fetchTreatments(since:until:count:)` passes it through.
+- TIR provider scales count with window: `max(500, windowDays * 100)` to avoid silent truncation on longer analysis windows.
 
 ## Structural checks
 

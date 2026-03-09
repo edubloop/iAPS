@@ -99,7 +99,7 @@ extension TIRAnalysis {
                     TIRAnalysisResult(
                         events: events, windowCoverage: coverage, analysisDate: now,
                         rangeBreakdown: buildRangeBreakdown(glucose: simInput.glucose),
-                        readiness: readiness, recommendations: []
+                        readiness: readiness, recommendations: [], warnings: []
                     ).pattern(for: $0)
                 }
                 let simAuditReport = TIRSettingsAuditor.audit(
@@ -117,7 +117,8 @@ extension TIRAnalysis {
                     analysisDate: now,
                     rangeBreakdown: buildRangeBreakdown(glucose: simInput.glucose),
                     readiness: readiness,
-                    recommendations: simRecommendations
+                    recommendations: simRecommendations,
+                    warnings: []
                 )
             }
 
@@ -160,8 +161,11 @@ extension TIRAnalysis {
             //     This eliminates the 24h pump data constraint for insulin context.
             let treatments: [NigtscoutTreatment]
             let exerciseEvents: [ExerciseEvent]
+            var analysisWarnings: [String] = []
             if source == .nightscout, settings.nightscoutFetchEnabled {
-                treatments = await fetchNightscoutTreatments(from: windowStart, to: windowEnd)
+                let fetchResult = await fetchNightscoutTreatments(from: windowStart, to: windowEnd, windowDays: windowDays)
+                treatments = fetchResult.treatments
+                if let notice = fetchResult.notice { analysisWarnings.append(notice) }
                 let nsExercise = mapTreatmentsToExerciseEvents(treatments)
                 let hkWorkouts = await hkReader.fetchWorkouts(from: windowStart, to: windowEnd)
                 exerciseEvents = nsExercise + hkWorkouts
@@ -217,7 +221,8 @@ extension TIRAnalysis {
                 analysisDate: now,
                 rangeBreakdown: buildRangeBreakdown(glucose: glucose),
                 readiness: readiness,
-                recommendations: []
+                recommendations: [],
+                warnings: []
             )
             let patterns = TIREventCategory.allCases.map { partialResult.pattern(for: $0) }
             let auditReport = TIRSettingsAuditor.audit(
@@ -239,7 +244,8 @@ extension TIRAnalysis {
                 analysisDate: now,
                 rangeBreakdown: buildRangeBreakdown(glucose: glucose),
                 readiness: readiness,
-                recommendations: recommendations
+                recommendations: recommendations,
+                warnings: analysisWarnings
             )
         }
 
@@ -521,11 +527,23 @@ extension TIRAnalysis {
         // MARK: - Nightscout Treatment Mapping
 
         /// Fetch all Nightscout treatments for the analysis window.
-        private func fetchNightscoutTreatments(from start: Date, to end: Date) async -> [NigtscoutTreatment] {
-            for await treatments in nightscoutManager.fetchTreatments(since: start, until: end).values {
-                return treatments
+        /// Count scales with window size: max(500, windowDays * 100) to avoid silent truncation.
+        /// Returns the treatments and an optional notice string when the fetch fails.
+        private func fetchNightscoutTreatments(
+            from start: Date,
+            to end: Date,
+            windowDays: Int = 7
+        ) async -> (treatments: [NigtscoutTreatment], notice: String?) {
+            let count = max(500, windowDays * 100)
+            do {
+                for try await treatments in nightscoutManager.fetchTreatments(since: start, until: end, count: count).values {
+                    return (treatments, nil)
+                }
+                return ([], nil)
+            } catch {
+                warning(.nightscout, "Treatment fetch failed: \(error.localizedDescription)")
+                return ([], "Treatment data unavailable — insulin context excluded from low event classification.")
             }
-            return []
         }
 
         /// Map Nightscout treatments to lightweight classifier input types.

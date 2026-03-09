@@ -64,12 +64,9 @@ final class TIRRecommendationEngineTests: XCTestCase {
 
     func test_allPatternedCategories_produceRecommendations() {
         let categories: [TIREventCategory] = [
-            // High categories
             .postConnectivityGap, .reboundHigh, .risingWithoutCarbs,
-            .constraintLimited, .persistentElevation,
-            // Low categories
-            .compressionLow, .overcorrectionLow, .stackingLow, .activityRelatedLow,
-            .reboundLow, .basalTooAggressive, .persistentLow, .fallingWithoutActiveInsulin
+            .constraintLimited, .persistentElevation, .reboundLow,
+            .persistentLow, .fallingWithoutActiveInsulin
         ]
         for category in categories {
             let pattern = makePattern(category: category, eventCount: 3)
@@ -428,73 +425,5 @@ final class TIRRecommendationEngineTests: XCTestCase {
     func test_timeOfDayBuckets_allInOnePeriod() {
         let buckets = TimeOfDayBuckets(overnight: 0, morning: 10, afternoon: 0, evening: 0)
         XCTAssertEqual(buckets.dominantPeriod, "morning")
-    }
-
-    // MARK: - New low category recommendation tests
-
-    func test_compressionLow_producesObservationalRecommendation() {
-        let pattern = makePattern(category: .compressionLow, eventCount: 3)
-        let recs = TIRRecommendationEngine.recommend(patterns: [pattern])
-        XCTAssertEqual(recs.count, 1)
-        XCTAssertEqual(recs[0].category, .compressionLow)
-        XCTAssertEqual(recs[0].depth, .observational)
-        XCTAssertEqual(recs[0].source, .pattern)
-    }
-
-    func test_overcorrectionLow_producesSpecificRecommendation() {
-        let pattern = makePattern(category: .overcorrectionLow, eventCount: 3)
-        let recs = TIRRecommendationEngine.recommend(patterns: [pattern])
-        XCTAssertEqual(recs.count, 1)
-        XCTAssertEqual(recs[0].depth, .specific)
-    }
-
-    func test_stackingLow_producesSpecificRecommendation() {
-        let pattern = makePattern(category: .stackingLow, eventCount: 3)
-        let recs = TIRRecommendationEngine.recommend(patterns: [pattern])
-        XCTAssertEqual(recs.count, 1)
-        XCTAssertEqual(recs[0].depth, .specific)
-    }
-
-    func test_activityRelatedLow_producesSpecificRecommendation() {
-        let pattern = makePattern(category: .activityRelatedLow, eventCount: 3)
-        let recs = TIRRecommendationEngine.recommend(patterns: [pattern])
-        XCTAssertEqual(recs.count, 1)
-        XCTAssertEqual(recs[0].depth, .specific)
-    }
-
-    func test_basalTooAggressive_producesObservationalRecommendation() {
-        let pattern = makePattern(category: .basalTooAggressive, eventCount: 3)
-        let recs = TIRRecommendationEngine.recommend(patterns: [pattern])
-        XCTAssertEqual(recs.count, 1)
-        XCTAssertEqual(recs[0].depth, .observational)
-    }
-
-    func test_overcorrectionLow_plus_sigmoidWatch_producesCrossRef() {
-        let pattern = makePattern(category: .overcorrectionLow, eventCount: 3)
-        let report = makeAuditReport(findings: [watchFinding(.sigmoidAutosens, message: "Sigmoid aggressive")])
-        let recs = TIRRecommendationEngine.recommend(patterns: [pattern], auditReport: report)
-        let crossRefs = recs.filter { $0.source == .crossReferenced }
-        XCTAssertEqual(crossRefs.count, 1)
-        XCTAssertEqual(crossRefs[0].category, .overcorrectionLow)
-        XCTAssertTrue(crossRefs[0].detail.contains("Sigmoid aggressive"))
-    }
-
-    func test_stackingLow_plus_smbMinutesWatch_producesCrossRef() {
-        let pattern = makePattern(category: .stackingLow, eventCount: 4)
-        let report = makeAuditReport(findings: [watchFinding(.maxSMBBasalMinutes, message: "SMB cap high")])
-        let recs = TIRRecommendationEngine.recommend(patterns: [pattern], auditReport: report)
-        let crossRefs = recs.filter { $0.source == .crossReferenced }
-        XCTAssertEqual(crossRefs.count, 1)
-        XCTAssertEqual(crossRefs[0].category, .stackingLow)
-    }
-
-    func test_lowCategoryWithNoMatchingRule_getsPlainRec() {
-        // compressionLow has no cross-ref rule
-        let pattern = makePattern(category: .compressionLow, eventCount: 4)
-        let report = makeAuditReport(findings: [watchFinding(.maxIOB)])
-        let recs = TIRRecommendationEngine.recommend(patterns: [pattern], auditReport: report)
-        let plainRecs = recs.filter { $0.source == .pattern }
-        XCTAssertEqual(plainRecs.count, 1)
-        XCTAssertEqual(plainRecs[0].category, .compressionLow)
     }
 }

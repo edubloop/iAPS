@@ -45,6 +45,17 @@ struct TIRSummaryView: View {
                     .padding(.vertical, 4)
                 }
 
+                if let notice = state.analysisError {
+                    HStack(spacing: 8) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundColor(.orange)
+                        Text(notice)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.vertical, 4)
+                }
+
                 Button {
                     state.triggerAnalysis()
                 } label: {

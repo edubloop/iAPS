@@ -26,6 +26,7 @@
 4. Analysis: TIR provider composes glucose/carbs/pump data and calls pure TIR engines.
 5. Presentation: SwiftUI modules render Home/Stats/TIR and act on state models.
 6. Optional remote sync: Nightscout/network services fetch/upload treatment and profile data.
+7. Error propagation: `NightscoutManager.fetchTreatments` propagates errors (return type `Error`) so the TIR provider can detect fetch failures vs legitimate empty results. Failures are surfaced as `TIRAnalysisResult.warnings[]` and bound to `TIRAnalysisStateModel.analysisError` for UI display. All other NightscoutManager fetch methods retain `Never` error type (swallowed) until Phase 3.
 
 ## Key source-of-truth files
 
@@ -34,6 +35,18 @@
 - Global UI/app config values: `FreeAPS/Sources/Models/Configs.swift`
 - TIR engine entry points: `FreeAPS/Sources/Modules/TIRAnalysis/`
 - Plugin behavior switchboard: `FreeAPS/Sources/APS/KnownPlugins.swift`
+
+## Home module refresh model
+
+- `Home.StateModel` uses a `setNeedsRefresh(_ sections: Set<RefreshSection>)` debounce pattern (100ms).
+- Observer callbacks (`glucoseDidUpdate`, `suggestionDidUpdate`, `pumpHistoryDidUpdate`, `enactedSuggestionDidUpdate`, `settingsDidChange`) mark dirty sections instead of calling setup methods directly.
+- A single `flushPendingRefresh()` call coalesces all pending sections after the debounce window, preventing redundant overlapping fetches and mixed-time-slice UI state.
+
+## CoreData threading model
+
+- `CoreDataStorage` provides both synchronous (`performAndWait`) and async (`@MainActor async`) variants for `fetchGlucose`, `fetchInsulinData`, and `fetchLoopStats`.
+- UI callers in `HomeStateModel` use the async variants via `Task { @MainActor in ... }`, so the main run loop is not held while CoreData executes I/O.
+- Managed objects remain safely on `viewContext` (main thread). Non-UI callers continue using synchronous variants.
 
 ## Change routing guide
 

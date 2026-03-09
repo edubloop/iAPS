@@ -20,6 +20,20 @@ final class CoreDataStorage {
         return fetchGlucose
     }
 
+    /// Non-blocking variant for UI callers. Uses `perform` (async) so the main run loop
+    /// is not held while CoreData executes the fetch. Objects remain on viewContext.
+    @MainActor func fetchGlucoseAsync(interval: NSDate) async -> [Readings] {
+        await withCheckedContinuation { continuation in
+            coredataContext.perform {
+                let request = Readings.fetchRequest() as NSFetchRequest<Readings>
+                request.sortDescriptors = [NSSortDescriptor(key: "date", ascending: false)]
+                request.predicate = NSPredicate(format: "glucose > 0 AND date > %@", interval)
+                let result = (try? self.coredataContext.fetch(request)) ?? []
+                continuation.resume(returning: result)
+            }
+        }
+    }
+
     func fetchRecentGlucose() -> Readings? {
         var fetchGlucose = [Readings]()
         coredataContext.performAndWait {
@@ -54,6 +68,23 @@ final class CoreDataStorage {
             )
         }
         return result
+    }
+
+    /// Non-blocking variant for UI callers. Maps to value type `[IOBTick0]` before returning.
+    @MainActor func fetchInsulinDataAsync(interval: NSDate) async -> [IOBTick0] {
+        await withCheckedContinuation { continuation in
+            coredataContext.perform {
+                let request = InsulinActivity.fetchRequest()
+                request.sortDescriptors = [NSSortDescriptor(key: "date", ascending: true)]
+                request.predicate = NSPredicate(format: "date > %@", interval)
+                let ticks = (try? self.coredataContext.fetch(request)) ?? []
+                let result = ticks.compactMap { tick -> IOBTick0? in
+                    guard let date = tick.date, let activity = tick.activity, let iob = tick.iob else { return nil }
+                    return IOBTick0(time: date, iob: iob as Decimal, activity: activity as Decimal)
+                }
+                continuation.resume(returning: result)
+            }
+        }
     }
 
     func saveInsulinData(iobEntries: [IOBTick0]) -> Decimal? {
@@ -97,6 +128,19 @@ final class CoreDataStorage {
             try? fetchLoopStats = self.coredataContext.fetch(requestLoopStats)
         }
         return fetchLoopStats
+    }
+
+    /// Non-blocking variant for UI callers. Objects remain on viewContext.
+    @MainActor func fetchLoopStatsAsync(interval: NSDate) async -> [LoopStatRecord] {
+        await withCheckedContinuation { continuation in
+            coredataContext.perform {
+                let request = LoopStatRecord.fetchRequest() as NSFetchRequest<LoopStatRecord>
+                request.sortDescriptors = [NSSortDescriptor(key: "start", ascending: false)]
+                request.predicate = NSPredicate(format: "interval > 0 AND start > %@", interval)
+                let result = (try? self.coredataContext.fetch(request)) ?? []
+                continuation.resume(returning: result)
+            }
+        }
     }
 
     func fetchTDD(interval: NSDate) -> [TDD] {

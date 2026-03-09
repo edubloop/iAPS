@@ -135,6 +135,7 @@ extension NightscoutConfig {
                     // handle error
                     self.saveError("Error occured: " + error_.localizedDescription)
                     error = error_.localizedDescription
+                    group.leave()
                     return
                 }
                 guard let httpResponse = response as? HTTPURLResponse,
@@ -143,6 +144,7 @@ extension NightscoutConfig {
                     print("Error occured! " + error_.debugDescription)
                     // handle error
                     self.saveError(error_.debugDescription)
+                    group.leave()
                     return
                 }
                 let jsonDecoder = JSONCoding.decoder
@@ -301,6 +303,9 @@ extension NightscoutConfig {
                         error = parsingError.localizedDescription
                         group.leave()
                     }
+                } else {
+                    error = "\nUnexpected response format from Nightscout."
+                    group.leave()
                 }
             }
             task.resume()

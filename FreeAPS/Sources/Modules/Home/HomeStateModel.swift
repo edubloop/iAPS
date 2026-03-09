@@ -19,6 +19,45 @@ extension Home {
         private let timer = DispatchTimer(timeInterval: 5)
         private(set) var filteredHours = 24
 
+        // MARK: - Coalesced refresh
+
+        private enum RefreshSection {
+            case glucose
+            case loopStats
+            case activity
+            case basals
+            case overrides
+            case data
+            case cob
+        }
+
+        private var pendingRefresh: Set<RefreshSection> = []
+        private var refreshDebounceTask: Task<Void, Never>?
+
+        private func setNeedsRefresh(_ sections: Set<RefreshSection>) {
+            pendingRefresh.formUnion(sections)
+            refreshDebounceTask?.cancel()
+            refreshDebounceTask = Task { @MainActor [weak self] in
+                try? await Task.sleep(nanoseconds: 100_000_000) // 100ms debounce
+                guard let self = self, !Task.isCancelled else { return }
+                self.flushPendingRefresh()
+            }
+        }
+
+        private func flushPendingRefresh() {
+            let sections = pendingRefresh
+            pendingRefresh = []
+            if sections.contains(.glucose) { setupGlucose() }
+            if sections.contains(.loopStats) { setupLoopStats() }
+            if sections.contains(.activity) { setupActivity() }
+            if sections.contains(.basals) { setupBasals()
+                setupBoluses()
+                setupSuspensions() }
+            if sections.contains(.overrides) { setupOverrideHistory() }
+            if sections.contains(.data) { setupData() }
+            if sections.contains(.cob) { setupCob() }
+        }
+
         @Published var dynamicVariables: DynamicVariables?
         @Published var uploadStats = false
         @Published var enactedSuggestion: Suggestion?
@@ -75,8 +114,6 @@ extension Home {
         @Published var skipGlucoseChart: Bool = false
         @Published var displayDelta: Bool = false
         @Published var openAPSSettings: Preferences?
-        @Published var maxIOB: Decimal = 0
-        @Published var maxCOB: Decimal = 0
         @Published var autoisf = false
         @Published var displayExpiration = false
         @Published var displaySAGE = true
@@ -203,8 +240,6 @@ extension Home {
             data.useCarbBars = settingsManager.settings.useCarbBars
             skipGlucoseChart = settingsManager.settings.skipGlucoseChart
             displayDelta = settingsManager.settings.displayDelta
-            maxIOB = settingsManager.preferences.maxIOB
-            maxCOB = settingsManager.preferences.maxCOB
             autoisf = settingsManager.settings.autoisf
             hours = settingsManager.settings.hours
             displayExpiration = settingsManager.settings.displayExpiration
@@ -417,7 +452,6 @@ extension Home {
                 guard let self = self else { return }
                 self.data.isManual = self.provider.manualGlucose(hours: self.filteredHours)
                 self.data.glucose = self.provider.filteredGlucose(hours: self.filteredHours)
-                self.readings = CoreDataStorage().fetchGlucose(interval: DateFilter().today)
                 self.recentGlucose = self.data.glucose.last
                 if self.data.glucose.count >= 2 {
                     self.glucoseDelta =
@@ -430,6 +464,11 @@ extension Home {
                     self.glucoseDelta = nil
                 }
                 self.alarm = self.provider.glucoseStorage.alarm
+                // Fetch CoreData readings async so the main run loop is not held during I/O.
+                Task { @MainActor [weak self] in
+                    guard let self = self else { return }
+                    self.readings = await CoreDataStorage().fetchGlucoseAsync(interval: DateFilter().today)
+                }
             }
         }
 
@@ -484,9 +523,9 @@ extension Home {
         }
 
         private func setupActivity() {
-            DispatchQueue.main.async { [weak self] in
+            Task { @MainActor [weak self] in
                 guard let self = self else { return }
-                self.data.activity = CoreDataStorage().fetchInsulinData(interval: DateFilter().day)
+                self.data.activity = await CoreDataStorage().fetchInsulinDataAsync(interval: DateFilter().day)
             }
         }
 
@@ -536,21 +575,23 @@ extension Home {
         }
 
         private func setupLoopStats() {
-            let loopStats = CoreDataStorage().fetchLoopStats(interval: DateFilter().today)
-            let loops = loopStats.compactMap({ each in each.loopStatus }).count
-            let readings = CoreDataStorage().fetchGlucose(interval: DateFilter().today).compactMap({ each in each.glucose }).count
-            let percentage = min(readings != 0 ? (Double(loops) / Double(readings) * 100) : 0, 100)
-            // First loop date
-            let time = (loopStats.last?.start ?? Date.now).addingTimeInterval(-5.minutes.timeInterval)
-
-            let average = -1 * (time.timeIntervalSinceNow / 60) / max(Double(loops), 1)
-
-            loopStatistics = (
-                loops,
-                readings,
-                percentage,
-                average.formatted(.number.grouping(.never).rounded().precision(.fractionLength(1))) + " min"
-            )
+            Task { @MainActor [weak self] in
+                guard let self = self else { return }
+                let loopStats = await CoreDataStorage().fetchLoopStatsAsync(interval: DateFilter().today)
+                let glucoseReadings = await CoreDataStorage().fetchGlucoseAsync(interval: DateFilter().today)
+                let loops = loopStats.compactMap({ each in each.loopStatus }).count
+                let readings = glucoseReadings.compactMap({ each in each.glucose }).count
+                let percentage = min(readings != 0 ? (Double(loops) / Double(readings) * 100) : 0, 100)
+                // First loop date
+                let time = (loopStats.last?.start ?? Date.now).addingTimeInterval(-5.minutes.timeInterval)
+                let average = -1 * (time.timeIntervalSinceNow / 60) / max(Double(loops), 1)
+                self.loopStatistics = (
+                    loops,
+                    readings,
+                    percentage,
+                    average.formatted(.number.grouping(.never).rounded().precision(.fractionLength(1))) + " min"
+                )
+            }
         }
 
         private func setupOverrides() {
@@ -748,8 +789,7 @@ extension Home.StateModel:
     PumpTimeZoneObserver
 {
     func glucoseDidUpdate(_: [BloodGlucose]) {
-        setupGlucose()
-        setupLoopStats()
+        setNeedsRefresh([.glucose, .loopStats])
     }
 
     func suggestionDidUpdate(_ suggestion: Suggestion) {
@@ -757,11 +797,7 @@ extension Home.StateModel:
         data.iob = data.suggestion?.iob
         carbsRequired = suggestion.carbsReq
         setStatusTitle()
-        setupOverrideHistory()
-        setupLoopStats()
-        setupData()
-        setupActivity()
-        setupCob()
+        setNeedsRefresh([.overrides, .loopStats, .data, .activity, .cob])
     }
 
     func settingsDidChange(_ settings: FreeAPSSettings) {
@@ -793,8 +829,6 @@ extension Home.StateModel:
         data.useCarbBars = settingsManager.settings.useCarbBars
         skipGlucoseChart = settingsManager.settings.skipGlucoseChart
         displayDelta = settingsManager.settings.displayDelta
-        maxIOB = settingsManager.preferences.maxIOB
-        maxCOB = settingsManager.preferences.maxCOB
         autoisf = settingsManager.settings.autoisf
         hours = settingsManager.settings.hours
         displayExpiration = settingsManager.settings.displayExpiration
@@ -805,18 +839,14 @@ extension Home.StateModel:
         tirAnalysisEnabled = settingsManager.settings.tirAnalysisEnabled
         updateSensorDays()
 
-        setupGlucose()
-        setupOverrideHistory()
-        setupData()
+        setNeedsRefresh([.glucose, .overrides, .data])
     }
 
     func pumpHistoryDidUpdate(_: [PumpHistoryEvent]) {
-        setupBasals()
-        setupBoluses()
-        setupSuspensions()
+        setNeedsRefresh([.basals, .activity])
+        // Announcements and IOB are lightweight and depend on pump history directly.
         setupAnnouncements()
         setupIOB()
-        setupActivity()
     }
 
     func pumpSettingsDidChange(_: PumpSettings) {
@@ -840,9 +870,7 @@ extension Home.StateModel:
     func enactedSuggestionDidUpdate(_ suggestion: Suggestion) {
         enactedSuggestion = suggestion
         setStatusTitle()
-        setupOverrideHistory()
-        setupLoopStats()
-        setupData()
+        setNeedsRefresh([.overrides, .loopStats, .data])
     }
 
     func pumpBatteryDidChange(_: Battery) {

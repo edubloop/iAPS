@@ -9,7 +9,7 @@ protocol NightscoutManager {
     func fetchCarbs() -> AnyPublisher<[CarbsEntry], Never>
     func fetchTempTargets() -> AnyPublisher<[TempTarget], Never>
     func fetchAnnouncements() -> AnyPublisher<[Announcement], Never>
-    func fetchTreatments(since: Date, until: Date) -> AnyPublisher<[NigtscoutTreatment], Never>
+    func fetchTreatments(since: Date, until: Date, count: Int) -> AnyPublisher<[NigtscoutTreatment], Error>
     func deleteCarbs(_ date: Date)
     func deleteInsulin(at date: Date)
     func deleteManualGlucose(at: Date)
@@ -25,6 +25,10 @@ protocol NightscoutManager {
     func deleteOverride()
     func editOverride(_ profile: String, _ duration_: Double, _ date: Date)
     func fetchVersion()
+}
+
+enum NightscoutError: Error {
+    case unavailable
 }
 
 final class BaseNightscoutManager: NightscoutManager, Injectable {
@@ -119,14 +123,16 @@ final class BaseNightscoutManager: NightscoutManager, Injectable {
 
         let startDate = Date()
         let secondsToFetch = Double(startDate.timeIntervalSince1970 - date.timeIntervalSince1970)
-        func paginate(until: Date?, acc: [BloodGlucose]) -> AnyPublisher<[BloodGlucose], Error> {
+        // Accumulate chunks as separate arrays to avoid O(n²) copying on each page.
+        // The full result is flattened once when pagination finishes.
+        func paginate(until: Date?, chunks: [[BloodGlucose]]) -> AnyPublisher<[BloodGlucose], Error> {
             debug(.nightscout, "requesting glucose records page from nightscout: \(date) .. \(String(describing: until))")
             return nightscout.fetchLastGlucose(sinceDate: date, untilDate: until)
                 .flatMap { chunk -> AnyPublisher<[BloodGlucose], Error> in
                     guard let oldest = chunk.min(by: { $0.dateString < $1.dateString }) else {
                         // empty chunk, nothing more to request
                         progress?(100.0)
-                        return Just(acc).setFailureType(to: Error.self).eraseToAnyPublisher()
+                        return Just(Array(chunks.joined())).setFailureType(to: Error.self).eraseToAnyPublisher()
                     }
 
                     let secondsFetched = Double(startDate.timeIntervalSince1970 - oldest.dateString.timeIntervalSince1970)
@@ -134,12 +140,12 @@ final class BaseNightscoutManager: NightscoutManager, Injectable {
                         progress?((secondsFetched / secondsToFetch).clamped(0.0 ... 100.0))
                     }
 
-                    return paginate(until: oldest.dateString, acc: acc + chunk)
+                    return paginate(until: oldest.dateString, chunks: chunks + [chunk])
                 }
                 .eraseToAnyPublisher()
         }
 
-        return paginate(until: nil, acc: []) // start with no upper bound on date
+        return paginate(until: nil, chunks: []) // start with no upper bound on date
             .tryCatch({ (error) -> AnyPublisher<[BloodGlucose], Error> in
                 print(error.localizedDescription)
                 return Just([]).setFailureType(to: Error.self).eraseToAnyPublisher()
@@ -167,12 +173,11 @@ final class BaseNightscoutManager: NightscoutManager, Injectable {
             .eraseToAnyPublisher()
     }
 
-    func fetchTreatments(since: Date, until: Date) -> AnyPublisher<[NigtscoutTreatment], Never> {
+    func fetchTreatments(since: Date, until: Date, count: Int = 500) -> AnyPublisher<[NigtscoutTreatment], Error> {
         guard let nightscout = nightscoutAPI, isNetworkReachable else {
-            return Just([]).eraseToAnyPublisher()
+            return Fail(error: NightscoutError.unavailable).eraseToAnyPublisher()
         }
-        return nightscout.fetchTreatments(sinceDate: since, untilDate: until)
-            .replaceError(with: [])
+        return nightscout.fetchTreatments(sinceDate: since, untilDate: until, count: count)
             .eraseToAnyPublisher()
     }
 

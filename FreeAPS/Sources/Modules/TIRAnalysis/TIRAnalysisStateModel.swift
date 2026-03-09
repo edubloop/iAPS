@@ -16,6 +16,10 @@ extension TIRAnalysis {
         /// True while an analysis run is in progress.
         @Published var isAnalyzing: Bool = false
 
+        /// Non-nil when the most recent analysis completed with data-source warnings.
+        /// nil when analysis succeeded cleanly or has not yet run.
+        @Published var analysisError: String? = nil
+
         /// Analysis window in days. Supported values: 7, 14, 30.
         @Published var windowDays: Int = 7
 
@@ -29,12 +33,14 @@ extension TIRAnalysis {
         func triggerAnalysis() {
             guard !isAnalyzing else { return }
             isAnalyzing = true
+            analysisError = nil
             refreshAuditReport()
             let days = windowDays
             Task {
                 let result = await provider.runAnalysis(windowDays: days)
                 await MainActor.run {
                     self.analysisResult = result
+                    self.analysisError = result.warnings.isEmpty ? nil : result.warnings.joined(separator: "\n")
                     self.isAnalyzing = false
                 }
             }

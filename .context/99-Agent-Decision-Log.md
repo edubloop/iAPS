@@ -55,6 +55,41 @@ Use this file to keep short, date-stamped decisions that affect future agent ses
 - Code refs: `Engine/LowEventClassifier.swift` (new), `TIRModels.swift` (InsulinEvent, TempBasalEvent, ExerciseEvent, LowEventContext, LowEventFeatures), `NightscoutAPI.swift` (fetchTreatments), `NightscoutManager.swift`, `TIRHealthKitReader.swift` (fetchWorkouts), `TIRAnalysisProvider.swift` (treatment mapping, context builder, lowHeavy scenario), `TIRRecommendationEngine.swift` (5 new recs, 2 new cross-ref rules), `TIRSummaryView.swift` (Low Patterns section), `BuildTools/TIREngineTests/Tests/FreeAPSTests/LowEventClassifierTests.swift` (42 tests)
 - Doc refs updated: `.context/60-TIR-Insights-Current-State.md`, `.context/70-Testing-Matrix.md`
 
+- Date: 2026-03-09
+- Area: Phase 1 — Error semantics and failure visibility
+- Decision: Added `warnings: [String]` to `TIRAnalysisResult`; `TIRAnalysisStateModel.analysisError: String?` bound to joined warnings; `TIRSummaryView` shows orange triangle banner when non-nil. Changed `NightscoutManager.fetchTreatments` protocol from `Never` → `Error` and removed `replaceError(with: [])` in the impl; added `NightscoutError.unavailable` thrown when Nightscout is not reachable. Removed catch block from `NightscoutAPI.fetchTreatments` (re-throws). `TIRAnalysisProvider.fetchNightscoutTreatments` now catches errors and returns a `notice: String?`. Provider collects notices into `analysisWarnings` and passes them to the final result. All other NightscoutManager methods retain `Never` error type.
+- Why: UI could not distinguish "analysis ran but empty" from "Nightscout unreachable"; silent treatment fetch failures degraded low-event classification quality with no user-visible signal.
+- Code refs: `TIRModels.swift`, `TIRAnalysisStateModel.swift`, `TIRSummaryView.swift`, `TIRAnalysisProvider.swift`, `NightscoutManager.swift`, `NightscoutAPI.swift`
+- Doc refs updated: `.context/10-Architecture-Map.md`, `.context/60-TIR-Insights-Current-State.md`
+
+- Date: 2026-03-09
+- Area: Phase 0 — Critical bug fixes
+- Decision: (0A) Fixed DispatchGroup hang in `NightscoutConfigStateModel.importSettings()` — two early-return paths (network error, non-2xx HTTP) and a mimeType fall-through path were missing `group.leave()`, causing a 5-second UI freeze. Added `group.leave()` to all missing paths and an `else` branch for the mimeType check. (0B) Replaced force cast `response as! HTTPURLResponse` in `NetworkService` with a safe `guard let ... as? HTTPURLResponse`. (0C) Added `count` parameter to `NightscoutAPI.fetchTreatments` and `NightscoutManager.fetchTreatments`; TIR provider now scales count as `max(500, windowDays * 100)` to prevent silent insulin-context truncation on larger analysis windows.
+- Why: Production bugs (hang, unsafe cast) and silent data quality degradation for multi-week TIR windows.
+- Code refs: `NightscoutConfigStateModel.swift`, `NetworkService.swift`, `NightscoutAPI.swift`, `NightscoutManager.swift`, `TIRAnalysisProvider.swift`
+- Doc refs updated: `.context/30-Network-Endpoints-And-URL-Schemes.md`, `.context/60-TIR-Insights-Current-State.md`
+
+- Date: 2026-03-09
+- Area: Phase 4 — Performance polish
+- Decision: (4A) Fixed O(n²) glucose pagination in `NightscoutManager.fetchGlucose` — changed `acc: [BloodGlucose]` accumulator to `chunks: [[BloodGlucose]]` and flatten with `Array(chunks.joined())` only on termination. Each page now appends a small array reference instead of copying the full accumulator. (4B) Added `categoryCache: [TIREventCategory: [TIREvent]]` to `TIRAnalysisResult` (both canonical and harness mirrors), computed once in an explicit `init` from `events`. `events(for:)`, `tirCost(for:)`, and `pattern(for:)` now read from cache — O(1) per category instead of O(n) per call. (4C) Removed duplicate `@Published var maxIOB` and `@Published var maxCOB` from `HomeStateModel`; redirected `HomeRootView` from `state.maxIOB/maxCOB` to `state.data.maxIOB/maxCOB`. `ChartModel` is now the single owner; assignment happens once in `setupData()` / `settingsDidChange` instead of twice.
+- Why: Paginating 90-day glucose backfill with copying accumulator was quadratic in page count. Category filter repeated per render for N categories × M events. Two identical `@Published` properties set from the same source at the same time added needless state and observer churn.
+- Code refs: `FreeAPS/Sources/Services/Network/NightscoutManager.swift`, `FreeAPS/Sources/Modules/TIRAnalysis/Engine/TIRModels.swift`, `BuildTools/TIREngineTests/Sources/FreeAPS/Engine/TIRModels.swift`, `FreeAPS/Sources/Modules/Home/HomeStateModel.swift`, `FreeAPS/Sources/Modules/Home/View/HomeRootView.swift`
+- Doc refs updated: `.context/99-Agent-Decision-Log.md`
+
+- Date: 2026-03-09
+- Area: Phase 3A/3B — NightscoutAPI request builder and force-unwrap elimination
+- Decision: Extracted private `makeRequest(baseURL:path:queryItems:method:constrainedNetwork:addSecret:)` helper in `NightscoutAPI`. All 23 endpoint methods now use it, eliminating ~200 lines of `URLComponents` boilerplate. Methods now `guard let request = makeRequest(...)` and return `missingURLPublisher()` (`Fail<T, NightscoutAPI.Error.missingURL>`) on failure instead of force-unwrapping `components.url!`. All `try!` JSON encoding calls changed to `try?`; encoding failures produce a nil body (server-side rejection, no crash). Stats/version methods pass `baseURL: IAPSconfig.statURL` and `addSecret: false` to the builder.
+- Why: 23 copies of 8-line URLComponents boilerplate accumulated drift risk and multiple force-unwrap (`url!`, `try!`) crash paths. Centralized builder enforces consistent timeout, constrained-network, and auth-header policy across all endpoints.
+- Code refs: `FreeAPS/Sources/Services/Network/NightscoutAPI.swift`
+- Doc refs updated: `.context/30-Network-Endpoints-And-URL-Schemes.md`, `AGENTS.md`
+
+- Date: 2026-03-09
+- Area: Phase 2 — CoreData threading and Home observer coalescing
+- Decision: (2A) Added three `@MainActor async` CoreData variants (`fetchGlucoseAsync`, `fetchInsulinDataAsync`, `fetchLoopStatsAsync`) using `withCheckedContinuation` + `viewContext.perform` to yield the run loop during I/O. Updated three `HomeStateModel` setup methods (`setupGlucose`, `setupActivity`, `setupLoopStats`) to call async variants via `Task { @MainActor [weak self] in ... }`. (2B) Introduced `RefreshSection` enum + `setNeedsRefresh(_ sections: Set<RefreshSection>)` debounce pattern (100ms via `Task.sleep`) in `HomeStateModel`. Observer callbacks (`glucoseDidUpdate`, `suggestionDidUpdate`, `pumpHistoryDidUpdate`, `enactedSuggestionDidUpdate`, `settingsDidChange`) now mark dirty sections; a single `flushPendingRefresh()` coalesces all pending sections after the debounce window.
+- Why: CoreData `performAndWait` on main thread blocked UI during observer callbacks. Single events were triggering 3-6 overlapping setup methods causing mixed-time-slice state and redundant fetches.
+- Code refs: `FreeAPS/Sources/APS/Storage/CoreDataStorage.swift` (async variants), `FreeAPS/Sources/Modules/Home/HomeStateModel.swift` (RefreshSection, debounce, updated callers)
+- Doc refs updated: `.context/10-Architecture-Map.md`
+
 - Date: 2026-03-08
 - Area: TIR recommendation engine — settings audit integration
 - Decision: Merged settings audit into unified Patterns & Suggestions via cross-referencing engine. Added `AuditCheckID` enum to `TIRSettingsAuditFinding`, `RecommendationSource` enum and optional `category` to `TIRRecommendation`. Implemented 5 cross-reference rules mapping pattern categories to audit checks, with deduplication (cross-refs replace plain pattern recs). Removed standalone Settings Audit section from `TIRSummaryView`. Added 11 new tests (62 total, 61 passing).

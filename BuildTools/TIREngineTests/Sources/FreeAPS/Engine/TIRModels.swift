@@ -213,6 +213,35 @@ struct TIRAnalysisResult {
     let rangeBreakdown: TIRRangeBreakdown
     let readiness: TIRReadiness
     let recommendations: [TIRRecommendation]
+    /// Data-source warnings surfaced during the analysis run.
+    /// Non-empty when partial data was detected (e.g., treatment fetch failure).
+    let warnings: [String]
+
+    // Precomputed once at init; makes category lookups O(1) instead of O(n) per call.
+    private let categoryCache: [TIREventCategory: [TIREvent]]
+
+    init(
+        events: [TIREvent],
+        windowCoverage: WindowCoverage,
+        analysisDate: Date,
+        rangeBreakdown: TIRRangeBreakdown,
+        readiness: TIRReadiness,
+        recommendations: [TIRRecommendation],
+        warnings: [String] = []
+    ) {
+        self.events = events
+        self.windowCoverage = windowCoverage
+        self.analysisDate = analysisDate
+        self.rangeBreakdown = rangeBreakdown
+        self.readiness = readiness
+        self.recommendations = recommendations
+        self.warnings = warnings
+        var cache: [TIREventCategory: [TIREvent]] = [:]
+        for event in events {
+            cache[event.category, default: []].append(event)
+        }
+        categoryCache = cache
+    }
 
     /// Sum of tirCost across all events.
     var totalTIRCost: Double {
@@ -220,15 +249,15 @@ struct TIRAnalysisResult {
     }
 
     func events(for category: TIREventCategory) -> [TIREvent] {
-        events.filter { $0.category == category }
+        categoryCache[category] ?? []
     }
 
     func tirCost(for category: TIREventCategory) -> Double {
-        events(for: category).map(\.tirCost).reduce(0, +)
+        (categoryCache[category] ?? []).map(\.tirCost).reduce(0, +)
     }
 
     func pattern(for category: TIREventCategory) -> TIRCategoryPattern {
-        let categoryEvents = events(for: category)
+        let categoryEvents = categoryCache[category] ?? []
         let calendar = Calendar.current
         var overnight = 0, morning = 0, afternoon = 0, evening = 0
         for event in categoryEvents {
@@ -323,6 +352,8 @@ struct TIRCategoryPattern {
     let recurrenceDays: Int
 }
 
+// MARK: - TIRRecommendation
+
 enum RecommendationDepth {
     /// Actionable, category-specific guidance.
     case specific
@@ -339,9 +370,36 @@ enum RecommendationSource {
     case crossReferenced
 }
 
+/// A single recommendation — from patterns, settings audit, or both cross-referenced.
+struct TIRRecommendation {
+    /// The event category this recommendation relates to. nil for audit-only recommendations.
+    let category: TIREventCategory?
+    /// One-line label for summary list row.
+    let headline: String
+    /// 1–2 sentence explanation shown in detail.
+    let detail: String
+    let depth: RecommendationDepth
+    let source: RecommendationSource
+
+    init(
+        category: TIREventCategory? = nil,
+        headline: String,
+        detail: String,
+        depth: RecommendationDepth,
+        source: RecommendationSource = .pattern
+    ) {
+        self.category = category
+        self.headline = headline
+        self.detail = detail
+        self.depth = depth
+        self.source = source
+    }
+}
+
 // MARK: - Low Event Classification Types
 
 /// Lightweight insulin event for LowEventClassifier consumption.
+/// Mapped from NigtscoutTreatment by the Provider.
 struct InsulinEvent {
     let timestamp: Date
     let units: Double
@@ -370,61 +428,43 @@ enum ExerciseSource: String {
 }
 
 /// All lookback context for a single low segment, gathered by the Provider.
+/// Passed to LowEventClassifier.classify() — pure data, no DI.
 struct LowEventContext {
     let segmentStart: Date
     let segmentEnd: Date
     let nadir: Int
     let readings: [BloodGlucose]
+    /// All glucose in the analysis window (for rebound/prior-high lookback).
     let allGlucose: [BloodGlucose]
     let configuration: TIRAnalysisConfiguration
 
+    // Insulin context (from Nightscout treatments, 0–4h lookback)
     let bolusesInWindow: [InsulinEvent]
     let smbsInWindow: [InsulinEvent]
     let tempBasalsInWindow: [TempBasalEvent]
 
+    // Carb context
     let carbEntries: [CarbsEntry]?
+
+    // Exercise context
     let exerciseEvents: [ExerciseEvent]
 
+    // CGM noise (for compression low detection)
     let noiseLevel: Int?
 }
 
 /// Numerical feature vector extracted from a low event + context.
+/// Designed for future clustering/ML analysis.
 struct LowEventFeatures {
     let nadirMgdL: Int
     let durationMinutes: Int
-    let rateOfFall: Double
-    let rateOfRecovery: Double
+    let rateOfFall: Double // mg/dL per 5-min interval approaching nadir
+    let rateOfRecovery: Double // mg/dL per 5-min interval leaving nadir
     let totalBolusUnits4h: Double
     let smbCount1h: Int
     let carbsConsumed2h: Double
     let exerciseInLookback: Bool
     let hourOfDay: Int
-    let isOvernight: Bool
-    let category: TIREventCategory
-}
-
-/// A single recommendation — from patterns, settings audit, or both cross-referenced.
-struct TIRRecommendation {
-    /// The event category this recommendation relates to. nil for audit-only recommendations.
-    let category: TIREventCategory?
-    /// One-line label for summary list row.
-    let headline: String
-    /// 1–2 sentence explanation shown in detail.
-    let detail: String
-    let depth: RecommendationDepth
-    let source: RecommendationSource
-
-    init(
-        category: TIREventCategory? = nil,
-        headline: String,
-        detail: String,
-        depth: RecommendationDepth,
-        source: RecommendationSource = .pattern
-    ) {
-        self.category = category
-        self.headline = headline
-        self.detail = detail
-        self.depth = depth
-        self.source = source
-    }
+    let isOvernight: Bool // 0:00–6:00
+    let category: TIREventCategory // pre-computed label for clustering validation
 }

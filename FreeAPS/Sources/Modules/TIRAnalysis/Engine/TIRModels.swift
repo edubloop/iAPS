@@ -213,6 +213,35 @@ struct TIRAnalysisResult {
     let rangeBreakdown: TIRRangeBreakdown
     let readiness: TIRReadiness
     let recommendations: [TIRRecommendation]
+    /// Data-source warnings surfaced during the analysis run.
+    /// Non-empty when partial data was detected (e.g., treatment fetch failure).
+    let warnings: [String]
+
+    // Precomputed once at init; makes category lookups O(1) instead of O(n) per call.
+    private let categoryCache: [TIREventCategory: [TIREvent]]
+
+    init(
+        events: [TIREvent],
+        windowCoverage: WindowCoverage,
+        analysisDate: Date,
+        rangeBreakdown: TIRRangeBreakdown,
+        readiness: TIRReadiness,
+        recommendations: [TIRRecommendation],
+        warnings: [String] = []
+    ) {
+        self.events = events
+        self.windowCoverage = windowCoverage
+        self.analysisDate = analysisDate
+        self.rangeBreakdown = rangeBreakdown
+        self.readiness = readiness
+        self.recommendations = recommendations
+        self.warnings = warnings
+        var cache: [TIREventCategory: [TIREvent]] = [:]
+        for event in events {
+            cache[event.category, default: []].append(event)
+        }
+        categoryCache = cache
+    }
 
     /// Sum of tirCost across all events.
     var totalTIRCost: Double {
@@ -220,15 +249,15 @@ struct TIRAnalysisResult {
     }
 
     func events(for category: TIREventCategory) -> [TIREvent] {
-        events.filter { $0.category == category }
+        categoryCache[category] ?? []
     }
 
     func tirCost(for category: TIREventCategory) -> Double {
-        events(for: category).map(\.tirCost).reduce(0, +)
+        (categoryCache[category] ?? []).map(\.tirCost).reduce(0, +)
     }
 
     func pattern(for category: TIREventCategory) -> TIRCategoryPattern {
-        let categoryEvents = events(for: category)
+        let categoryEvents = categoryCache[category] ?? []
         let calendar = Calendar.current
         var overnight = 0, morning = 0, afternoon = 0, evening = 0
         for event in categoryEvents {

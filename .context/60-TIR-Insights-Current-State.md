@@ -37,7 +37,9 @@ Low glucose events are now classified by `LowEventClassifier` (pure static engin
 | 8 | `PERSISTENT_LOW` | Duration ≥ 45 min |
 | 9 | `UNCLASSIFIED_LOW` | Catch-all |
 
-Insulin context for low classification comes from **Nightscout treatment history** (full analysis window via `fetchTreatments(since:until:)`), not local pump storage (24h cap). `TIRAnalysisProvider.mapTreatmentsToInsulinEvents()` maps `NigtscoutTreatment` → `InsulinEvent`/`TempBasalEvent`. When Nightscout is unavailable, arrays are empty and insulin-dependent categories are skipped gracefully.
+Insulin context for low classification comes from **Nightscout treatment history** (full analysis window via `fetchTreatments(since:until:count:)`), not local pump storage (24h cap). `TIRAnalysisProvider.mapTreatmentsToInsulinEvents()` maps `NigtscoutTreatment` → `InsulinEvent`/`TempBasalEvent`. When Nightscout is unavailable, arrays are empty and insulin-dependent categories are skipped gracefully.
+
+Fetch count scales with analysis window: `max(500, windowDays * 100)`. This prevents silent truncation of insulin context on 14d/30d/90d windows.
 
 Exercise events come from: (1) Nightscout `nsExercise` treatments (excluding iAPS-generated overrides), (2) HealthKit workouts via `TIRHealthKitReader.fetchWorkouts(from:to:)`.
 
@@ -54,6 +56,15 @@ Exercise events come from: (1) Nightscout `nsExercise` treatments (excluding iAP
   - in range `70...180`
   - high `181...250`
   - very high `>250`
+
+## Error handling
+
+- `TIRAnalysisResult` carries a `warnings: [String]` field populated when partial data was detected during analysis.
+- `TIRAnalysisStateModel.analysisError: String?` is set to the joined warnings string after each run; cleared at run start.
+- `TIRSummaryView` displays a yellow triangle banner when `analysisError != nil` — distinguishes "analysis failed" from "empty result" in the UI.
+- Current trigger: Nightscout treatment fetch failure populates a warning: "Treatment data unavailable — insulin context excluded from low event classification."
+- `NightscoutManager.fetchTreatments` now returns `AnyPublisher<[NigtscoutTreatment], Error>` (propagates); `NightscoutError.unavailable` is thrown when Nightscout is not configured or network is unreachable.
+- `NightscoutAPI.fetchTreatments` no longer swallows errors — catch block removed, errors propagate to manager.
 
 ## Authoritative design references
 

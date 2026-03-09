@@ -425,7 +425,7 @@ extension Home {
                 // Carbs on Board
                 HStack {
                     let substance = Double(state.data.suggestion?.cob ?? 0)
-                    let max = max(Double(state.maxCOB), 1)
+                    let max = max(Double(state.data.maxCOB), 1)
                     let fraction: Double = 1 - (substance / max)
                     let fill = CGFloat(min(Swift.max(fraction, 0.05), substance > 0 ? 0.92 : 1))
                     TestTube(
@@ -453,7 +453,7 @@ extension Home {
                 // Insulin on Board
                 HStack {
                     let substance = Double(state.data.iob ?? 0)
-                    let max = max(Double(state.maxIOB), 1)
+                    let max = max(Double(state.data.maxIOB), 1)
                     let fraction: Double = 1 - abs(substance) / max
                     let fill = CGFloat(min(Swift.max(fraction, 0.05), 1))
                     TestTube(

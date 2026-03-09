@@ -33,6 +33,7 @@ Then choose task-specific docs from the routing section below.
 - If a literal is unavoidable, place it in the closest `Config`/constants scope and explain why.
 - Avoid duplicate endpoint/scheme strings across modules.
 - Keep feature docs and code in sync when touching architecture, constants, or behavior.
+- Network requests in `NightscoutAPI` must use the private `makeRequest(baseURL:path:queryItems:method:constrainedNetwork:addSecret:)` builder. Do not use raw `URLComponents` + `URLRequest` construction inline in endpoint methods.
 
 ## Do not do without explicit user approval
 
