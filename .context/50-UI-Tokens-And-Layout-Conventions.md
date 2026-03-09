@@ -23,6 +23,7 @@
 - Prefer semantic colors (`.insulin`, `.loopGreen`, etc.) over ad-hoc RGB values
 - Prefer shared config values (`IAPSconfig.*`) for repeated layout values
 - Use local `private enum Config` inside complex views for view-specific constants
+- Action buttons use `.borderedProminent` button style (established convention for primary actions, e.g. TIR Insights "Run Analysis")
 
 ## Known drift areas
 

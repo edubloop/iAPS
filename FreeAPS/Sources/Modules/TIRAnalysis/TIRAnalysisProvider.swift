@@ -57,12 +57,29 @@ extension TIRAnalysis {
                     baseConfiguration: configuration
                 )
                 let highEvents = TIRAnalysisEngine.analyze(simInput)
+                // For simulation, convert pump history to InsulinEvent format
+                let simBoluses = (simInput.pumpHistory ?? [])
+                    .filter { $0.type == .bolus && $0.isSMB != true }
+                    .map { InsulinEvent(
+                        timestamp: $0.timestamp,
+                        units: $0.amount.map { NSDecimalNumber(decimal: $0).doubleValue } ?? 0,
+                        isSMB: false, eventType: "Bolus"
+                    ) }
+                let simSMBs = (simInput.pumpHistory ?? [])
+                    .filter { $0.type == .smb || $0.isSMB == true }
+                    .map { InsulinEvent(
+                        timestamp: $0.timestamp,
+                        units: $0.amount.map { NSDecimalNumber(decimal: $0).doubleValue } ?? 0,
+                        isSMB: true, eventType: "SMB"
+                    ) }
                 let lowEvents = buildLowPatternEvents(
                     glucose: simInput.glucose,
                     configuration: configuration,
                     carbEntries: simInput.carbEntries,
-                    iobHistory: simInput.iobHistory,
-                    pumpHistory: simInput.pumpHistory
+                    allBoluses: simBoluses,
+                    allSMBs: simSMBs,
+                    allTempBasals: [],
+                    exerciseEvents: []
                 )
                 let events = (highEvents + lowEvents).sorted { $0.start < $1.start }
                 let coverage = buildCoverage(
@@ -85,7 +102,14 @@ extension TIRAnalysis {
                         readiness: readiness, recommendations: []
                     ).pattern(for: $0)
                 }
-                let simRecommendations = TIRRecommendationEngine.recommend(patterns: simPatterns)
+                let simAuditReport = TIRSettingsAuditor.audit(
+                    settings: settingsManager.settings,
+                    preferences: settingsManager.preferences
+                )
+                let simRecommendations = TIRRecommendationEngine.recommend(
+                    patterns: simPatterns,
+                    auditReport: simAuditReport
+                )
                 debug(.service, "TIR simulation complete: \(events.count) events, scenario \(scenario.rawValue)")
                 return TIRAnalysisResult(
                     events: events,
@@ -132,6 +156,22 @@ extension TIRAnalysis {
                 $0.timestamp.addingTimeInterval(24 * 3600) > now
             }
 
+            // 4b. Fetch full treatment history from Nightscout for low event classification.
+            //     This eliminates the 24h pump data constraint for insulin context.
+            let treatments: [NigtscoutTreatment]
+            let exerciseEvents: [ExerciseEvent]
+            if source == .nightscout, settings.nightscoutFetchEnabled {
+                treatments = await fetchNightscoutTreatments(from: windowStart, to: windowEnd)
+                let nsExercise = mapTreatmentsToExerciseEvents(treatments)
+                let hkWorkouts = await hkReader.fetchWorkouts(from: windowStart, to: windowEnd)
+                exerciseEvents = nsExercise + hkWorkouts
+            } else {
+                treatments = []
+                let hkWorkouts = await hkReader.fetchWorkouts(from: windowStart, to: windowEnd)
+                exerciseEvents = hkWorkouts
+            }
+            let (allBoluses, allSMBs, allTempBasals) = mapTreatmentsToInsulinEvents(treatments)
+
             let readiness = buildReadiness(
                 glucose: glucose,
                 windowStart: windowStart,
@@ -152,8 +192,10 @@ extension TIRAnalysis {
                 glucose: glucose,
                 configuration: configuration,
                 carbEntries: carbEntries,
-                iobHistory: nil,
-                pumpHistory: recentPump.isEmpty ? nil : recentPump
+                allBoluses: allBoluses,
+                allSMBs: allSMBs,
+                allTempBasals: allTempBasals,
+                exerciseEvents: exerciseEvents
             )
             let events = (highEvents + lowEvents).sorted { $0.start < $1.start }
 
@@ -178,7 +220,14 @@ extension TIRAnalysis {
                 recommendations: []
             )
             let patterns = TIREventCategory.allCases.map { partialResult.pattern(for: $0) }
-            let recommendations = TIRRecommendationEngine.recommend(patterns: patterns)
+            let auditReport = TIRSettingsAuditor.audit(
+                settings: settingsManager.settings,
+                preferences: settingsManager.preferences
+            )
+            let recommendations = TIRRecommendationEngine.recommend(
+                patterns: patterns,
+                auditReport: auditReport
+            )
 
             debug(
                 .service,
@@ -340,12 +389,16 @@ extension TIRAnalysis {
             return []
         }
 
+        // MARK: - Low Event Detection
+
         private func buildLowPatternEvents(
             glucose: [BloodGlucose],
             configuration: TIRAnalysisConfiguration,
             carbEntries: [CarbsEntry]?,
-            iobHistory: [IOBTick0]?,
-            pumpHistory: [PumpHistoryEvent]?
+            allBoluses: [InsulinEvent],
+            allSMBs: [InsulinEvent],
+            allTempBasals: [TempBasalEvent],
+            exerciseEvents: [ExerciseEvent]
         ) -> [TIREvent] {
             let sorted = glucose
                 .filter { $0.isStateValid }
@@ -387,18 +440,20 @@ extension TIRAnalysis {
                 guard durationMinutes >= 10 else { continue }
 
                 let nadir = segment.map { ThresholdCrossingDetector.sgvValue($0) }.min() ?? 0
-                let category = lowCategory(
-                    start: start,
-                    end: end,
+                let context = buildLowEventContext(
+                    segment: segment,
+                    segmentStart: start,
+                    segmentEnd: end,
                     nadir: nadir,
+                    allGlucose: sorted,
                     configuration: configuration,
+                    allBoluses: allBoluses,
+                    allSMBs: allSMBs,
+                    allTempBasals: allTempBasals,
                     carbEntries: carbEntries,
-                    iobHistory: iobHistory,
-                    pumpHistory: pumpHistory,
-                    allGlucose: sorted
+                    exerciseEvents: exerciseEvents
                 )
-                let confidence: TIREventConfidence = nadir < 54 ? .high : .medium
-                let factors = lowFactors(category: category, nadir: nadir, durationMinutes: durationMinutes)
+                let (category, confidence, factors) = LowEventClassifier.classify(context: context)
 
                 let minuteKey = TIRAnalysisEngine.stableMinuteKey(from: start)
                 let ordinal = (ordinalsByMinute[minuteKey] ?? 0) + 1
@@ -421,79 +476,121 @@ extension TIRAnalysis {
             return events
         }
 
-        private func lowCategory(
-            start: Date,
-            end: Date,
+        /// Build context for a single low segment by filtering global event arrays to the relevant lookback window.
+        private func buildLowEventContext(
+            segment: [BloodGlucose],
+            segmentStart: Date,
+            segmentEnd: Date,
             nadir: Int,
+            allGlucose: [BloodGlucose],
             configuration: TIRAnalysisConfiguration,
+            allBoluses: [InsulinEvent],
+            allSMBs: [InsulinEvent],
+            allTempBasals: [TempBasalEvent],
             carbEntries: [CarbsEntry]?,
-            iobHistory: [IOBTick0]?,
-            pumpHistory: [PumpHistoryEvent]?,
-            allGlucose: [BloodGlucose]
-        ) -> TIREventCategory {
-            let lookbackStart = start.addingTimeInterval(-90 * 60)
-            let hadRecentHigh = allGlucose.contains {
-                $0.dateString >= lookbackStart &&
-                    $0.dateString < start &&
-                    ThresholdCrossingDetector.sgvValue($0) > Int(configuration.highThresholdMgdL)
-            }
-            if hadRecentHigh { return .reboundLow }
+            exerciseEvents: [ExerciseEvent]
+        ) -> LowEventContext {
+            let lookbackStart = segmentStart.addingTimeInterval(-4 * 3600)
 
-            if end.timeIntervalSince(start) >= 45 * 60 { return .persistentLow }
-
-            let recentIOB = iobHistory?.filter { $0.time >= start.addingTimeInterval(-60 * 60) && $0.time <= start }
-            let maxRecentIOB = recentIOB?.map { NSDecimalNumber(decimal: $0.iob).doubleValue }.max() ?? 0
-            let recentInsulinAction = (pumpHistory ?? []).contains {
-                $0.timestamp >= start.addingTimeInterval(-75 * 60) &&
-                    $0.timestamp <= start &&
-                    ($0.type == .smb || $0.type == .bolus || $0.isSMB == true)
-            }
-            let recentCarbs = (carbEntries ?? []).contains {
-                let d = $0.actualDate ?? $0.createdAt
-                return d >= start.addingTimeInterval(-2 * 60 * 60) && d <= start
-            }
-            if maxRecentIOB < 0.3, !recentInsulinAction, !recentCarbs, nadir >= 54 {
-                return .fallingWithoutActiveInsulin
+            let relevantBoluses = allBoluses.filter { $0.timestamp >= lookbackStart && $0.timestamp <= segmentStart }
+            let relevantSMBs = allSMBs.filter { $0.timestamp >= lookbackStart && $0.timestamp <= segmentStart }
+            let relevantTempBasals = allTempBasals.filter { $0.start >= lookbackStart && $0.start <= segmentEnd }
+            let relevantExercise = exerciseEvents.filter { event in
+                (event.end >= lookbackStart && event.end <= segmentStart) ||
+                    (event.start <= segmentEnd && event.end >= segmentStart)
             }
 
-            return .unclassifiedLow
+            let noiseLevel = segment.compactMap(\.noise).max()
+
+            return LowEventContext(
+                segmentStart: segmentStart,
+                segmentEnd: segmentEnd,
+                nadir: nadir,
+                readings: segment,
+                allGlucose: allGlucose,
+                configuration: configuration,
+                bolusesInWindow: relevantBoluses,
+                smbsInWindow: relevantSMBs,
+                tempBasalsInWindow: relevantTempBasals,
+                carbEntries: carbEntries,
+                exerciseEvents: relevantExercise,
+                noiseLevel: noiseLevel
+            )
         }
 
-        private func lowFactors(
-            category: TIREventCategory,
-            nadir: Int,
-            durationMinutes: Int
-        ) -> [TIRContributingFactor] {
-            switch category {
-            case .reboundLow:
-                return [
-                    TIRContributingFactor(
-                        factor: "Recent high before low",
-                        evidence: "Low followed a recent high/correction window",
-                        actionable: true,
-                        suggestion: "Review correction intensity and timing to reduce rebound lows"
-                    )
-                ]
-            case .persistentLow:
-                return [
-                    TIRContributingFactor(
-                        factor: "Sustained low duration",
-                        evidence: "Low range persisted for \(durationMinutes) minutes (nadir \(nadir) mg/dL)",
-                        actionable: true,
-                        suggestion: "Review basal profile and correction strategy around this period"
-                    )
-                ]
-            case .fallingWithoutActiveInsulin:
-                return [
-                    TIRContributingFactor(
-                        factor: "Drop without active insulin",
-                        evidence: "No recent active insulin signal detected before this low",
-                        actionable: true,
-                        suggestion: "Consider basal, activity, or meal-timing contributors"
-                    )
-                ]
-            default:
-                return []
+        // MARK: - Nightscout Treatment Mapping
+
+        /// Fetch all Nightscout treatments for the analysis window.
+        private func fetchNightscoutTreatments(from start: Date, to end: Date) async -> [NigtscoutTreatment] {
+            for await treatments in nightscoutManager.fetchTreatments(since: start, until: end).values {
+                return treatments
+            }
+            return []
+        }
+
+        /// Map Nightscout treatments to lightweight classifier input types.
+        private func mapTreatmentsToInsulinEvents(
+            _ treatments: [NigtscoutTreatment]
+        ) -> (boluses: [InsulinEvent], smbs: [InsulinEvent], tempBasals: [TempBasalEvent]) {
+            var boluses: [InsulinEvent] = []
+            var smbs: [InsulinEvent] = []
+            var tempBasals: [TempBasalEvent] = []
+
+            for t in treatments {
+                guard let date = t.createdAt else { continue }
+
+                switch t.eventType {
+                case .smb:
+                    let units = t.insulin.map { NSDecimalNumber(decimal: $0).doubleValue } ?? 0
+                    guard units > 0 else { continue }
+                    smbs.append(InsulinEvent(timestamp: date, units: units, isSMB: true, eventType: "SMB"))
+
+                case .bolus,
+                     .correctionBolus,
+                     .mealBolus,
+                     .snackBolus:
+                    let units = t.insulin.map { NSDecimalNumber(decimal: $0).doubleValue }
+                        ?? t.bolus.flatMap { $0.amount.map { NSDecimalNumber(decimal: $0).doubleValue } }
+                        ?? 0
+                    guard units > 0 else { continue }
+                    boluses.append(InsulinEvent(
+                        timestamp: date, units: units, isSMB: false,
+                        eventType: t.eventType.rawValue
+                    ))
+
+                case .nsTempBasal,
+                     .tempBasal:
+                    if let rate = t.absolute ?? t.rate {
+                        tempBasals.append(TempBasalEvent(
+                            start: date,
+                            durationMinutes: t.duration ?? 30,
+                            rate: NSDecimalNumber(decimal: rate).doubleValue
+                        ))
+                    }
+
+                default:
+                    break
+                }
+            }
+            return (boluses, smbs, tempBasals)
+        }
+
+        /// Extract exercise events from Nightscout treatments.
+        private func mapTreatmentsToExerciseEvents(_ treatments: [NigtscoutTreatment]) -> [ExerciseEvent] {
+            treatments.compactMap { t in
+                // Only match user-entered exercise events, not iAPS-generated overrides
+                guard t.eventType == .nsExercise,
+                      let date = t.createdAt,
+                      t.enteredBy != NigtscoutTreatment.local,
+                      t.enteredBy != NigtscoutTreatment.trio
+                else { return nil }
+                let duration = t.duration ?? 60
+                return ExerciseEvent(
+                    start: date,
+                    end: date.addingTimeInterval(TimeInterval(duration) * 60),
+                    source: .nightscout,
+                    notes: t.notes
+                )
             }
         }
 
@@ -502,6 +599,7 @@ extension TIRAnalysis {
             case reboundHeavy = "rebound_heavy"
             case postGapHeavy = "post_gap_heavy"
             case constraintLimited = "constraint_limited"
+            case lowHeavy = "low_heavy"
 
             var title: String {
                 switch self {
@@ -509,6 +607,7 @@ extension TIRAnalysis {
                 case .reboundHeavy: "Rebound-focused"
                 case .postGapHeavy: "Post-gap focused"
                 case .constraintLimited: "Constraint-limited"
+                case .lowHeavy: "Low-focused"
                 }
             }
         }
@@ -589,6 +688,37 @@ extension TIRAnalysis {
                 ]
                 iobTicks = iobTicksNearCeiling(for: [interval(22, 19, from: windowEnd)], maxIOB: safeMaxIOB)
                 pumpEvents = smbEvents(for: [interval(7, 3, from: windowEnd)], windowEnd: windowEnd)
+
+            case .lowHeavy:
+                // Three rebound lows: each high ends ~30 min before the paired low starts.
+                // reboundLow classifier fires: prior high within 90 min, no SMBs.
+                highs = [
+                    interval(51, 50, from: windowEnd),
+                    interval(38, 37, from: windowEnd),
+                    interval(25, 24, from: windowEnd)
+                ]
+                lows = [
+                    interval(49.5, 48, from: windowEnd), // rebound after highs[0]
+                    interval(36.5, 35, from: windowEnd), // rebound after highs[1]
+                    interval(23.5, 22, from: windowEnd), // rebound after highs[2]
+                    // Three stacking lows: 3 SMBs in 60 min before each.
+                    // SMB windows are defined below using smbEvents().
+                    interval(14, 12.5, from: windowEnd),
+                    interval(10, 8.5, from: windowEnd),
+                    interval(6, 4.5, from: windowEnd)
+                ]
+                carbs = []
+                // smbEvents() creates events at 20-min intervals within each window.
+                // Placing the 1-hour window ending exactly at each low start puts
+                // 3 SMBs (at T-40min, T-20min, T) within the 60-min stackingLow cutoff.
+                pumpEvents = smbEvents(
+                    for: [
+                        interval(15, 14, from: windowEnd), // SMBs before lows[3]
+                        interval(11, 10, from: windowEnd), // SMBs before lows[4]
+                        interval(7, 6, from: windowEnd) // SMBs before lows[5]
+                    ],
+                    windowEnd: windowEnd
+                )
             }
 
             if scenario == .constraintLimited {

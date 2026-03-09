@@ -99,7 +99,15 @@ Pure static analysis of `FreeAPSSettings` + `Preferences`. No loop data needed. 
 ```swift
 enum AuditSeverity { case watch, ok }
 
+enum AuditCheckID: String, Codable, Hashable {
+    case sigmoidAutosens
+    case maxDeltaUAM
+    case maxIOB
+    case maxSMBBasalMinutes
+}
+
 struct TIRSettingsAuditFinding {
+    let checkID: AuditCheckID
     let severity: AuditSeverity
     let message: String
     let suggestion: String?
@@ -122,9 +130,9 @@ enum TIRSettingsAuditor {
 Usable summary flow with grouped pattern presentation, source selection, simulator controls, and clearer audit guidance.
 
 ### Views (3)
-1. **`TIRSummaryView`** — 7/14/30/90-day windows, TIR zone bar (very low/low/in-range/high/very high), grouped breakdown sections
+1. **`TIRSummaryView`** — 7/14/30/90-day windows (default 7d), TIR zone bar (very low/low/in-range/high/very high), grouped breakdown sections. Settings audit findings are merged into "Patterns & Suggestions" (no separate audit section). Recommendations render with source-appropriate icons and badges (`.pattern` → lightbulb, `.settingsAudit` → gear + "Settings" badge, `.crossReferenced` → lightbulb + "Pattern + Settings" badge). Uses `.borderedProminent` button style for Run Analysis action.
 2. **`TIRCategoryDetailView`** — event list per category/group with duration + severity + factor chips
-3. **`TIRSettingsAuditView`** — plain-language findings (What we see / Why it matters / What to try)
+3. **`TIRSettingsAuditView`** — plain-language findings (What we see / Why it matters / What to try). No longer linked as a standalone section in TIRSummaryView; reachable via audit-only recommendation row drill-in.
 
 ### Navigation
 - Entry point: row in existing Home → Statistics/Insights section; sheet presented; gated by `tirAnalysisEnabled`
@@ -133,7 +141,7 @@ Usable summary flow with grouped pattern presentation, source selection, simulat
 
 ### Current grouped presentation
 - **High Patterns:** Rebound High, Persistent Elevation, Rising Without Carbs, Max Insulin Limit
-- **Low Patterns:** Rebound Low, Persistent Low, Falling Without Active Insulin
+- **Low Patterns:** Compression Low, Overcorrection Low, Stacking Low, Activity-Related Low, Rebound Low, Basal Too Aggressive, Falling Without Active Insulin, Persistent Low
 - **Data Quality:** Post Connectivity Gap
 - **Unclassified Outliers:** combined row with split metrics (`High x% • Low y%`)
 
@@ -155,10 +163,27 @@ Usable summary flow with grouped pattern presentation, source selection, simulat
   - `recommendations: [TIRRecommendation]`
   - per-category `pattern(for:)` aggregation (`TIRCategoryPattern`, `TimeOfDayBuckets`)
 - New pure engine:
-  - `TIRRecommendationEngine` (thresholded recommendations, currently `>=3` events)
+  - `TIRRecommendationEngine` with two entry points:
+    - `recommend(patterns:)` — backward-compatible, pattern-only
+    - `recommend(patterns:auditReport:)` — full cross-referencing with settings audit
+  - Cross-reference mapping table (7 rules) linking `TIREventCategory` to `AuditCheckID`:
+    - `constraintLimited` ↔ `maxIOB`
+    - `risingWithoutCarbs` ↔ `sigmoidAutosens`
+    - `reboundHigh` ↔ `sigmoidAutosens`
+    - `persistentElevation` ↔ `maxSMBBasalMinutes`
+    - `postConnectivityGap` ↔ `maxDeltaUAM`
+    - `overcorrectionLow` ↔ `sigmoidAutosens`
+    - `stackingLow` ↔ `maxSMBBasalMinutes`
+  - Deduplication: cross-referenced recs replace plain pattern recs for the same category
+  - Audit-only recs: `.watch` findings not consumed by cross-refs become standalone recommendations with `category: nil`
+- New model types:
+  - `RecommendationSource` enum (`.pattern`, `.settingsAudit`, `.crossReferenced`)
+  - `TIRRecommendation.category` is now optional (`TIREventCategory?`) to support audit-only recs
+  - `TIRRecommendation.source` field (defaults to `.pattern` for backward compat)
 - Summary UI additions:
   - coverage/readiness indicator at top
-  - `Patterns & Suggestions` section surfaced from recommendation engine output
+  - unified `Patterns & Suggestions` section with all three recommendation sources
+  - Last Updated timestamp (day, month, year, HH:mm in 24h format)
 
 ### Files
 ```
@@ -212,4 +237,4 @@ bash BuildTools/run_tir_tests.sh
 ```
 
 Copies engine source + test files fresh before each run, then executes `swift test` on macOS.
-Current baseline is 32 tests passing before any commit.
+Current baseline is 131 tests, 0 failures (includes 42 `LowEventClassifierTests` + 7 new `TIRRecommendationEngineTests` added for low classification).

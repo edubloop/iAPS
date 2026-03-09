@@ -21,7 +21,7 @@ This spec is broader than current Phase 1A implementation. The following reflect
   - `HealthKit`
   - No auto/fallback mode.
 - Simulator mode and scenario picker are available in the same TIR Insights config screen.
-- Summary UI supports `7 / 14 / 30 / 90` day windows.
+- Summary UI supports `7 / 14 / 30 / 90` day windows (default: **7 days**).
 - Summary enforces a minimum-data readiness gate per selected window:
   - `7d` requires 7 full days
   - `14d` requires 14 full days
@@ -44,7 +44,10 @@ This spec is broader than current Phase 1A implementation. The following reflect
 - Current recommendation pipeline:
   - Category patterns are aggregated via time-of-day buckets.
   - `TIRRecommendationEngine` emits recommendation rows for recurring patterns (current threshold: `>=3` events).
-  - Summary surfaces these in `Patterns & Suggestions`.
+  - Settings audit findings (`TIRSettingsAuditor`) are cross-referenced with glucose patterns via a 5-rule mapping table. When a recurring pattern correlates with a `.watch` settings finding, a merged cross-referenced recommendation is produced with both pattern stats and settings context.
+  - Remaining `.watch` findings not consumed by cross-refs surface as standalone audit-only recommendations.
+  - All recommendation types (`.pattern`, `.settingsAudit`, `.crossReferenced`) appear in a unified `Patterns & Suggestions` section — there is no separate Settings Audit section in the summary UI.
+  - Summary includes "Last Updated" timestamp with 24h time format.
 
 All recommendations remain advisory-only; no automatic dosing/settings changes are performed.
 
@@ -209,6 +212,9 @@ Tapping a category shows:
 ```
 
 ### 5.3 Settings Risk Audit (Static Analysis)
+
+> **Current state:** The standalone Settings Audit section has been removed from `TIRSummaryView`. Audit findings are now cross-referenced with glucose patterns and surfaced inline in the unified "Patterns & Suggestions" section. The detailed `TIRSettingsAuditView` remains reachable via audit-only recommendation row drill-in.
+
 Independent of outcome data, the engine can evaluate settings configuration for known risky combinations:
 
 ```

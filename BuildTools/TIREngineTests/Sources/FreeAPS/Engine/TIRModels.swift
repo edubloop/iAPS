@@ -2,20 +2,26 @@ import Foundation
 
 // MARK: - TIREventCategory
 
-/// The classification of a high-glucose event for Phase 1A decomposition.
-/// Priority order matches EventClassifier strict precedence.
+/// Classification of a glucose event. Priority order within each group
+/// matches the corresponding classifier's strict precedence.
 enum TIREventCategory: String, Codable, CaseIterable {
+    // High categories (EventClassifier priority order)
     case reboundHigh = "REBOUND_HIGH"
     case postConnectivityGap = "POST_CONNECTIVITY_GAP"
     case constraintLimited = "CONSTRAINT_LIMITED"
     case risingWithoutCarbs = "RISING_WITHOUT_CARBS"
     case persistentElevation = "PERSISTENT_ELEVATION"
     case unclassifiedHigh = "UNCLASSIFIED_HIGH"
+    // Low categories (LowEventClassifier priority order)
+    case compressionLow = "COMPRESSION_LOW"
+    case overcorrectionLow = "OVERCORRECTION_LOW"
+    case stackingLow = "STACKING_LOW"
+    case activityRelatedLow = "ACTIVITY_RELATED_LOW"
     case reboundLow = "REBOUND_LOW"
-    case persistentLow = "PERSISTENT_LOW"
+    case basalTooAggressive = "BASAL_TOO_AGGRESSIVE"
     case fallingWithoutActiveInsulin = "FALLING_WITHOUT_ACTIVE_INSULIN"
+    case persistentLow = "PERSISTENT_LOW"
     case unclassifiedLow = "UNCLASSIFIED_LOW"
-    // Deferred to Track 2+: POST_MEAL_SPIKE and subcategories, LOW events
 }
 
 // MARK: - TIREventConfidence
@@ -317,8 +323,6 @@ struct TIRCategoryPattern {
     let recurrenceDays: Int
 }
 
-// MARK: - TIRRecommendation
-
 enum RecommendationDepth {
     /// Actionable, category-specific guidance.
     case specific
@@ -326,12 +330,101 @@ enum RecommendationDepth {
     case observational
 }
 
-/// A single category-level recommendation surfaced when ≥3 events are confirmed.
-struct TIRRecommendation {
+enum RecommendationSource {
+    /// Generated from glucose event patterns only.
+    case pattern
+    /// Generated from a settings audit finding with no matching pattern.
+    case settingsAudit
+    /// Cross-referenced: pattern evidence combined with audit finding.
+    case crossReferenced
+}
+
+// MARK: - Low Event Classification Types
+
+/// Lightweight insulin event for LowEventClassifier consumption.
+struct InsulinEvent {
+    let timestamp: Date
+    let units: Double
+    let isSMB: Bool
+    let eventType: String
+}
+
+/// Temp basal event for LowEventClassifier consumption.
+struct TempBasalEvent {
+    let start: Date
+    let durationMinutes: Int
+    let rate: Double // U/hr
+}
+
+/// Exercise/workout event for LowEventClassifier consumption.
+struct ExerciseEvent {
+    let start: Date
+    let end: Date
+    let source: ExerciseSource
+    let notes: String?
+}
+
+enum ExerciseSource: String {
+    case nightscout
+    case healthkit
+}
+
+/// All lookback context for a single low segment, gathered by the Provider.
+struct LowEventContext {
+    let segmentStart: Date
+    let segmentEnd: Date
+    let nadir: Int
+    let readings: [BloodGlucose]
+    let allGlucose: [BloodGlucose]
+    let configuration: TIRAnalysisConfiguration
+
+    let bolusesInWindow: [InsulinEvent]
+    let smbsInWindow: [InsulinEvent]
+    let tempBasalsInWindow: [TempBasalEvent]
+
+    let carbEntries: [CarbsEntry]?
+    let exerciseEvents: [ExerciseEvent]
+
+    let noiseLevel: Int?
+}
+
+/// Numerical feature vector extracted from a low event + context.
+struct LowEventFeatures {
+    let nadirMgdL: Int
+    let durationMinutes: Int
+    let rateOfFall: Double
+    let rateOfRecovery: Double
+    let totalBolusUnits4h: Double
+    let smbCount1h: Int
+    let carbsConsumed2h: Double
+    let exerciseInLookback: Bool
+    let hourOfDay: Int
+    let isOvernight: Bool
     let category: TIREventCategory
+}
+
+/// A single recommendation — from patterns, settings audit, or both cross-referenced.
+struct TIRRecommendation {
+    /// The event category this recommendation relates to. nil for audit-only recommendations.
+    let category: TIREventCategory?
     /// One-line label for summary list row.
     let headline: String
     /// 1–2 sentence explanation shown in detail.
     let detail: String
     let depth: RecommendationDepth
+    let source: RecommendationSource
+
+    init(
+        category: TIREventCategory? = nil,
+        headline: String,
+        detail: String,
+        depth: RecommendationDepth,
+        source: RecommendationSource = .pattern
+    ) {
+        self.category = category
+        self.headline = headline
+        self.detail = detail
+        self.depth = depth
+        self.source = source
+    }
 }

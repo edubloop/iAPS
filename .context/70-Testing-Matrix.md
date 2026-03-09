@@ -6,6 +6,8 @@
   - Run `BuildTools/run_tir_tests.sh`
   - Run targeted tests under `FreeAPSTests/TIRAnalysis/` when applicable
   - Include structural checks from `StructuralConventionsTests`
+  - Cross-referencing test coverage in `TIRRecommendationEngineTests`: audit-only recs, cross-ref generation for all 7 mapping rules (5 high + 2 low), deduplication, threshold edge cases, backward compatibility with nil audit report; new low category recommendation tests (compressionLow, overcorrectionLow, stackingLow, activityRelatedLow, basalTooAggressive)
+  - Low classifier tests in `LowEventClassifierTests`: each of 9 categories fires under correct conditions, priority ordering (stacking beats activity, activity beats rebound, etc.), graceful degradation (empty insulin arrays → skip insulin-dependent categories), feature extraction, rate helpers, edge cases (42 tests)
 
 - Network/service changes:
   - Run nearest service tests if present

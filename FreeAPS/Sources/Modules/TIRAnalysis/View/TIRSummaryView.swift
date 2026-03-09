@@ -15,19 +15,6 @@ struct TIRSummaryView: View {
                 }
                 .pickerStyle(.segmented)
 
-                Button {
-                    state.triggerAnalysis()
-                } label: {
-                    HStack {
-                        if state.isAnalyzing {
-                            ProgressView().padding(.trailing, 6)
-                        }
-                        Text(state.isAnalyzing ? "Analyzing..." : "Run Analysis")
-                            .fontWeight(.semibold)
-                    }
-                }
-                .disabled(state.isAnalyzing)
-
                 if let result = state.analysisResult {
                     VStack(alignment: .leading, spacing: 8) {
                         coverageIndicator(result.readiness)
@@ -44,21 +31,40 @@ struct TIRSummaryView: View {
                         .foregroundColor(.secondary)
                         rangeBar(result.rangeBreakdown)
                         rangeLegend(result.rangeBreakdown)
-                        Text("\(result.events.count) events • \(result.analysisDate, style: .date)")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                        Text(
+                            "Last updated: \(result.analysisDate, format: .dateTime.day().month(.wide).year().hour(.twoDigits(amPM: .omitted)).minute(.twoDigits))"
+                        )
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        if let source = result.windowCoverage.caveats.first(where: { $0.hasPrefix("Data source:") }) {
+                            Text(source)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
                     }
                     .padding(.vertical, 4)
                 }
+
+                Button {
+                    state.triggerAnalysis()
+                } label: {
+                    HStack {
+                        if state.isAnalyzing {
+                            ProgressView().padding(.trailing, 6)
+                        }
+                        Text(state.isAnalyzing ? "Analyzing..." : "Run Analysis")
+                    }
+                    .frame(maxWidth: .infinity, alignment: .center)
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(state.isAnalyzing)
             }
 
-            if let caveat = state.coverageCaveat {
-                Section {
-                    Text(caveat)
-                        .font(.footnote)
-                        .foregroundColor(.orange)
-                } header: {
-                    Text("Coverage Caveat")
+            if let result = state.analysisResult, !result.recommendations.isEmpty {
+                Section("Patterns & Suggestions") {
+                    ForEach(Array(result.recommendations.enumerated()), id: \.offset) { _, rec in
+                        recommendationRow(rec, result: result)
+                    }
                 }
             }
 
@@ -71,9 +77,14 @@ struct TIRSummaryView: View {
                 }
 
                 Section("Low Patterns") {
+                    breakdownRow(result: result, category: .compressionLow)
+                    breakdownRow(result: result, category: .overcorrectionLow)
+                    breakdownRow(result: result, category: .stackingLow)
+                    breakdownRow(result: result, category: .activityRelatedLow)
                     breakdownRow(result: result, category: .reboundLow)
-                    breakdownRow(result: result, category: .persistentLow)
+                    breakdownRow(result: result, category: .basalTooAggressive)
                     breakdownRow(result: result, category: .fallingWithoutActiveInsulin)
+                    breakdownRow(result: result, category: .persistentLow)
                 }
 
                 Section("Data Quality") {
@@ -104,45 +115,6 @@ struct TIRSummaryView: View {
                             ProgressView(value: highOutlierCost + lowOutlierCost, total: max(result.totalTIRCost, 0.0001))
                             Text("\(outlierEvents.count) events")
                                 .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                }
-            }
-
-            if let result = state.analysisResult, !result.recommendations.isEmpty {
-                Section("Patterns & Suggestions") {
-                    ForEach(Array(result.recommendations.enumerated()), id: \.offset) { _, rec in
-                        NavigationLink {
-                            TIRCategoryDetailView(title: title(for: rec.category), events: result.events(for: rec.category))
-                        } label: {
-                            VStack(alignment: .leading, spacing: 4) {
-                                HStack(spacing: 6) {
-                                    Image(systemName: rec.depth == .specific ? "lightbulb.fill" : "info.circle")
-                                        .foregroundColor(rec.depth == .specific ? .orange : .secondary)
-                                        .font(.caption)
-                                    Text(rec.headline)
-                                        .fontWeight(.semibold)
-                                }
-                                Text(rec.detail)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                            .padding(.vertical, 2)
-                        }
-                    }
-                }
-            }
-
-            if let audit = state.auditReport {
-                Section {
-                    NavigationLink {
-                        TIRSettingsAuditView(report: audit)
-                    } label: {
-                        HStack {
-                            Text("Settings Audit")
-                            Spacer()
-                            Text("\(audit.findings.count) findings")
                                 .foregroundColor(.secondary)
                         }
                     }
@@ -252,6 +224,63 @@ struct TIRSummaryView: View {
         }
     }
 
+    @ViewBuilder private func recommendationRow(_ rec: TIRRecommendation, result: TIRAnalysisResult) -> some View {
+        let icon: String = {
+            switch rec.source {
+            case .settingsAudit: return "gearshape.fill"
+            case .crossReferenced: return "lightbulb.fill"
+            case .pattern: return rec.depth == .specific ? "lightbulb.fill" : "info.circle"
+            }
+        }()
+        let iconColor: Color = {
+            switch rec.source {
+            case .crossReferenced,
+                 .settingsAudit: return .orange
+            case .pattern: return rec.depth == .specific ? .orange : .secondary
+            }
+        }()
+
+        NavigationLink {
+            if let category = rec.category {
+                TIRCategoryDetailView(title: title(for: category), events: result.events(for: category))
+            } else if let audit = state.auditReport {
+                TIRSettingsAuditView(report: audit)
+            }
+        } label: {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 5) {
+                    Image(systemName: icon)
+                        .foregroundColor(iconColor)
+                        .font(.subheadline)
+                    if rec.source == .settingsAudit {
+                        Text("Settings")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 2)
+                            .background(Color.secondary.opacity(0.12))
+                            .cornerRadius(4)
+                    } else if rec.source == .crossReferenced {
+                        Text("Pattern + Settings")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 2)
+                            .background(Color.secondary.opacity(0.12))
+                            .cornerRadius(4)
+                    }
+                }
+                Text(rec.headline)
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                Text(rec.detail)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            .padding(.vertical, 2)
+        }
+    }
+
     private func title(for category: TIREventCategory) -> String {
         switch category {
         case .reboundHigh: "Rebound High"
@@ -260,9 +289,14 @@ struct TIRSummaryView: View {
         case .risingWithoutCarbs: "Rising Without Carbs"
         case .persistentElevation: "Persistent Elevation"
         case .unclassifiedHigh: "Unclassified High"
+        case .compressionLow: "Compression Low"
+        case .overcorrectionLow: "Overcorrection Low"
+        case .stackingLow: "Stacking Low"
+        case .activityRelatedLow: "Activity-Related Low"
         case .reboundLow: "Rebound Low"
-        case .persistentLow: "Persistent Low"
+        case .basalTooAggressive: "Basal Too Aggressive"
         case .fallingWithoutActiveInsulin: "Falling Without Active Insulin"
+        case .persistentLow: "Persistent Low"
         case .unclassifiedLow: "Unclassified Low"
         }
     }

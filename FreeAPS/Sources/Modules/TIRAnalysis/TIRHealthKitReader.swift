@@ -83,6 +83,44 @@ struct TIRHealthKitReader {
         }
     }
 
+    // MARK: - Workouts
+
+    /// Fetch workout samples from HealthKit within [start, end).
+    /// Returns `ExerciseEvent` array for `ACTIVITY_RELATED_LOW` classification.
+    func fetchWorkouts(from start: Date, to end: Date) async -> [ExerciseEvent] {
+        guard HKHealthStore.isHealthDataAvailable() else { return [] }
+
+        let workoutType = HKObjectType.workoutType()
+        let predicate = HKQuery.predicateForSamples(withStart: start, end: end, options: .strictStartDate)
+        let sort = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)
+
+        return await withCheckedContinuation { continuation in
+            let query = HKSampleQuery(
+                sampleType: workoutType,
+                predicate: predicate,
+                limit: HKObjectQueryNoLimit,
+                sortDescriptors: [sort]
+            ) { _, results, error in
+                if let error = error {
+                    debug(.service, "TIRHealthKitReader: workout query error — \(error.localizedDescription)")
+                    continuation.resume(returning: [])
+                    return
+                }
+                let workouts = ((results as? [HKWorkout]) ?? []).map { workout in
+                    ExerciseEvent(
+                        start: workout.startDate,
+                        end: workout.endDate,
+                        source: .healthkit,
+                        notes: workout.workoutActivityType.commonName
+                    )
+                }
+                debug(.service, "TIRHealthKitReader: fetched \(workouts.count) workouts")
+                continuation.resume(returning: workouts)
+            }
+            store.execute(query)
+        }
+    }
+
     // MARK: - Conversion Helpers
 
     private static func bloodGlucose(from sample: HKQuantitySample) -> BloodGlucose? {
@@ -114,5 +152,30 @@ struct TIRHealthKitReader {
             enteredBy: CarbsEntry.appleHealth,
             isFPU: false
         )
+    }
+}
+
+// MARK: - HKWorkoutActivityType helpers
+
+extension HKWorkoutActivityType {
+    /// Human-readable name for common workout types.
+    var commonName: String {
+        switch self {
+        case .running: return "Running"
+        case .cycling: return "Cycling"
+        case .walking: return "Walking"
+        case .swimming: return "Swimming"
+        case .hiking: return "Hiking"
+        case .yoga: return "Yoga"
+        case .functionalStrengthTraining,
+             .traditionalStrengthTraining: return "Strength Training"
+        case .crossTraining: return "Cross Training"
+        case .elliptical: return "Elliptical"
+        case .rowing: return "Rowing"
+        case .dance: return "Dance"
+        case .coreTraining: return "Core Training"
+        case .highIntensityIntervalTraining: return "HIIT"
+        default: return "Workout"
+        }
     }
 }

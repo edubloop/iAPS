@@ -118,4 +118,70 @@ final class TIRSettingsAuditorTests: XCTestCase {
             "Expected .ok for maxSMBBasalMinutes in safe range (1–60)"
         )
     }
+
+    // MARK: - Boundary value tests
+
+    func test_sigmoidAutosensMax_exactlyAtBoundary_isOk() {
+        var prefs = Preferences()
+        prefs.sigmoid = true
+        prefs.autosensMax = 1.5 // boundary: > 1.5 triggers watch, so 1.5 is ok
+        let report = TIRSettingsAuditor.audit(settings: FreeAPSSettings(), preferences: prefs)
+        let finding = report.findings.first { $0.checkID == .sigmoidAutosens }
+        XCTAssertNotNil(finding)
+        XCTAssertEqual(finding?.severity, .ok, "autosensMax == 1.5 should be .ok (threshold is strictly > 1.5)")
+    }
+
+    func test_maxIOB_exactlyTwo_isOk() {
+        var prefs = Preferences()
+        prefs.maxIOB = 2.0 // boundary: < 2 triggers watch, so 2.0 is ok
+        let report = TIRSettingsAuditor.audit(settings: FreeAPSSettings(), preferences: prefs)
+        let finding = report.findings.first { $0.checkID == .maxIOB }
+        XCTAssertNotNil(finding)
+        XCTAssertEqual(finding?.severity, .ok, "maxIOB == 2.0 should be .ok")
+    }
+
+    func test_maxIOB_justBelowTwo_isWatch() {
+        var prefs = Preferences()
+        prefs.maxIOB = 1.99
+        let report = TIRSettingsAuditor.audit(settings: FreeAPSSettings(), preferences: prefs)
+        let finding = report.findings.first { $0.checkID == .maxIOB }
+        XCTAssertNotNil(finding)
+        XCTAssertEqual(finding?.severity, .watch, "maxIOB == 1.99 should be .watch (< 2)")
+    }
+
+    func test_smbMinutes_exactlySixty_isOk() {
+        var prefs = Preferences()
+        prefs.maxSMBBasalMinutes = 60 // boundary: > 60 triggers watch, so 60 is ok
+        let report = TIRSettingsAuditor.audit(settings: FreeAPSSettings(), preferences: prefs)
+        let finding = report.findings.first { $0.checkID == .maxSMBBasalMinutes }
+        XCTAssertNotNil(finding)
+        XCTAssertEqual(finding?.severity, .ok, "maxSMBBasalMinutes == 60 should be .ok (threshold is strictly > 60)")
+    }
+
+    func test_smbMinutes_sixtyOne_isWatch() {
+        var prefs = Preferences()
+        prefs.maxSMBBasalMinutes = 61
+        let report = TIRSettingsAuditor.audit(settings: FreeAPSSettings(), preferences: prefs)
+        let finding = report.findings.first { $0.checkID == .maxSMBBasalMinutes }
+        XCTAssertNotNil(finding)
+        XCTAssertEqual(finding?.severity, .watch, "maxSMBBasalMinutes == 61 should be .watch (> 60)")
+    }
+
+    func test_uamDelta_exactlyAtBoundary_isOk() {
+        var prefs = Preferences()
+        prefs.enableUAM = true
+        prefs.maxDeltaBGthreshold = 0.25 // boundary: < 0.25 triggers watch, so 0.25 is ok
+        let report = TIRSettingsAuditor.audit(settings: FreeAPSSettings(), preferences: prefs)
+        let finding = report.findings.first { $0.checkID == .maxDeltaUAM }
+        XCTAssertNotNil(finding)
+        XCTAssertEqual(finding?.severity, .ok, "maxDeltaBGthreshold == 0.25 should be .ok (threshold is strictly < 0.25)")
+    }
+
+    // MARK: - CheckID verification
+
+    func test_allFindingsHaveUniqueCheckIDs() {
+        let report = TIRSettingsAuditor.audit(settings: FreeAPSSettings(), preferences: Preferences())
+        let checkIDs = report.findings.map(\.checkID)
+        XCTAssertEqual(checkIDs.count, Set(checkIDs).count, "All findings should have unique checkIDs")
+    }
 }

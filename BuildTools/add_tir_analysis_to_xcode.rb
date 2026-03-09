@@ -54,6 +54,7 @@ engine_files = %w[
   EventClassifier.swift
   TIRAnalysisEngine.swift
   TIRSettingsAuditor.swift
+  LowEventClassifier.swift
 ]
 
 view_files = %w[
@@ -110,6 +111,8 @@ test_files = %w[
   TIRThresholdCrossingDetectorTests.swift
   TIRAnalysisEngineTests.swift
   TIRSettingsAuditorTests.swift
+  TIRRecommendationEngineTests.swift
+  LowEventClassifierTests.swift
 ]
 
 new_test_refs = []

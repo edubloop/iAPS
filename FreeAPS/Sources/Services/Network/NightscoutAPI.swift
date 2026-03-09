@@ -260,6 +260,46 @@ extension NightscoutAPI {
             .eraseToAnyPublisher()
     }
 
+    /// Fetch treatment records from Nightscout within [sinceDate, untilDate).
+    /// Used by TIR analysis to get full insulin/exercise history beyond local 24h pump retention.
+    func fetchTreatments(sinceDate: Date, untilDate: Date? = nil) -> AnyPublisher<[NigtscoutTreatment], Swift.Error> {
+        var components = URLComponents()
+        components.scheme = url.scheme
+        components.host = url.host
+        components.port = url.port
+        components.path = Config.treatmentsPath
+        components.queryItems = [
+            URLQueryItem(name: "count", value: "\(500)"),
+            URLQueryItem(
+                name: "find[created_at][$gte]",
+                value: Formatter.iso8601withFractionalSeconds.string(from: sinceDate)
+            )
+        ]
+        if let until = untilDate {
+            components.queryItems?.append(URLQueryItem(
+                name: "find[created_at][$lt]",
+                value: Formatter.iso8601withFractionalSeconds.string(from: until)
+            ))
+        }
+
+        var request = URLRequest(url: components.url!)
+        request.allowsConstrainedNetworkAccess = true
+        request.timeoutInterval = Config.timeout
+
+        if let secret = secret {
+            request.addValue(secret.sha1(), forHTTPHeaderField: "api-secret")
+        }
+
+        return service.run(request)
+            .retry(Config.retryCount)
+            .decode(type: [NigtscoutTreatment].self, decoder: JSONCoding.decoder)
+            .catch { error -> AnyPublisher<[NigtscoutTreatment], Swift.Error> in
+                warning(.nightscout, "Treatment fetching error: \(error.localizedDescription)")
+                return Just([]).setFailureType(to: Swift.Error.self).eraseToAnyPublisher()
+            }
+            .eraseToAnyPublisher()
+    }
+
     func fetchTempTargets(sinceDate: Date? = nil) -> AnyPublisher<[TempTarget], Swift.Error> {
         var components = URLComponents()
         components.scheme = url.scheme

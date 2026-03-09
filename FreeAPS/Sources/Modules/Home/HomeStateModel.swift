@@ -85,6 +85,7 @@ extension Home {
         @Published var profileButton: Bool = true
         @Published var mealData = MealData()
         @Published var tirAnalysisEnabled: Bool = false
+        @Published var tirDataSource: String = "nightscout"
 
         // Chart data
         var data = ChartModel(
@@ -219,6 +220,7 @@ extension Home {
             carbButton = settingsManager.settings.carbButton
             profileButton = settingsManager.settings.profileButton
             tirAnalysisEnabled = settingsManager.settings.tirAnalysisEnabled
+            tirDataSource = settingsManager.settings.tirDataSource
 
             broadcaster.register(GlucoseObserver.self, observer: self)
             broadcaster.register(SuggestionObserver.self, observer: self)
