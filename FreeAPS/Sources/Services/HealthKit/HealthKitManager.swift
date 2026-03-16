@@ -60,11 +60,9 @@ final class BaseHealthKitManager: HealthKitManager, Injectable {
 
     var areAllowAllPermissions: Bool {
         Set(Config.readPermissions.map { healthKitStore.authorizationStatus(for: $0) })
-            .intersection([.notDetermined])
-            .isEmpty &&
+            .isDisjoint(with: [.notDetermined]) &&
             Set(Config.writePermissions.map { healthKitStore.authorizationStatus(for: $0) })
-            .intersection([.sharingDenied, .notDetermined])
-            .isEmpty
+            .isDisjoint(with: [.sharingDenied, .notDetermined])
     }
 
     init(resolver: Resolver) {
