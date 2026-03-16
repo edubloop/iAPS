@@ -422,8 +422,7 @@ extension TIRAnalysis {
                 let value = ThresholdCrossingDetector.sgvValue(reading)
                 if value < Int(configuration.lowThresholdMgdL.rounded()) {
                     if let prev = current.last,
-                       reading.dateString.timeIntervalSince(prev.dateString) > 15 * 60
-                    {
+                       reading.dateString.timeIntervalSince(prev.dateString) > 15 * 60 {
                         segments.append(current)
                         current = []
                     }

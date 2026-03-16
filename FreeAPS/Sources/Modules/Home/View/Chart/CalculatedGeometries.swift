@@ -386,8 +386,7 @@ private final class GeometriesBuilder {
 
         if data.displayYgridLines,
            let glucoseMin = glucose.compactMap(\.glucose).min(),
-           let glucoseMax = glucose.compactMap(\.glucose).max()
-        {
+           let glucoseMax = glucose.compactMap(\.glucose).max() {
             if glucoseMin < lowGlucoseInt {
                 addLineAndLabel(lowGlucoseInt)
                 if glucoseMin < lowGlucoseInt - 18 {

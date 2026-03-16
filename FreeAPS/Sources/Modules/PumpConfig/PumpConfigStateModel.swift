@@ -8,8 +8,8 @@ extension PumpConfig {
         @Injected() var deviceManager: DeviceDataManager!
 
         @Published var pumpSetupPresented: Bool = false
-        @Published private(set) var pumpIdentifierToSetUp: String? = nil
-        @Published private(set) var pumpManagerStatus: PumpManagerStatus? = nil
+        @Published private(set) var pumpIdentifierToSetUp: String?
+        @Published private(set) var pumpManagerStatus: PumpManagerStatus?
 
         private(set) var initialSettings: PumpInitialSettings = .default
         @Published var alertNotAck: Bool = false

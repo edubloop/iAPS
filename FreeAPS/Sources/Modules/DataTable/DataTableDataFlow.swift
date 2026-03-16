@@ -136,8 +136,7 @@ enum DataTable {
                     .string(from: amount as NSNumber)! + NSLocalizedString(" g", comment: "gram of carbs")
             case .bolus:
                 var bolusText = " "
-                if isSMB ?? false {}
-                else if isExternal ?? false {
+                if isSMB ?? false {} else if isExternal ?? false {
                     bolusText += NSLocalizedString("External", comment: "External Insulin")
                 } else {
                     bolusText += NSLocalizedString("Manual", comment: "Manual Bolus")

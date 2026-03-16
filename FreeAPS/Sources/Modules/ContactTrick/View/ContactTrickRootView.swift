@@ -195,7 +195,7 @@ extension ContactTrick {
 
     struct EntryView: View {
         @Binding var entry: ContactTrickEntry
-        @State private var availableFonts: [String]? = nil
+        @State private var availableFonts: [String]?
         let previewState: ContactTrickState
 
         private let fontSizes: [Int] = [100, 120, 130, 140, 160, 180, 200, 225, 250, 275, 300, 350, 400]

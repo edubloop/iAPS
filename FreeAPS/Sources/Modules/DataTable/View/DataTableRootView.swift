@@ -406,8 +406,7 @@ extension DataTable {
                             }
                         }
                         header: {
-                            if amountWarningCondition
-                            {
+                            if amountWarningCondition {
                                 Text("⚠️ Warning! The entered insulin amount is greater than your Max Bolus setting!")
                             }
                         }

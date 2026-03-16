@@ -644,8 +644,7 @@ extension FreeAPSSettings: Decodable {
         }
 
         if let glucoseOverrideThresholdActiveDown = try? container
-            .decode(Bool.self, forKey: .glucoseOverrideThresholdActiveDown)
-        {
+            .decode(Bool.self, forKey: .glucoseOverrideThresholdActiveDown) {
             settings.glucoseOverrideThresholdActiveDown = glucoseOverrideThresholdActiveDown
         }
 

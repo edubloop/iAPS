@@ -1,13 +1,12 @@
-
 import Combine
 import SwiftUI
 
 final class AppGroupCGMSettingsViewModel: ObservableObject {
     let appGroupSource: AppGroupSource
-    @Published var latestReadingFrom: AppGroupSourceType? = nil
-    @Published var latestReadingFromOther: String? = nil
-    @Published var latestReadingDate: Date? = nil
-    @Published var deviceAddress: String? = nil
+    @Published var latestReadingFrom: AppGroupSourceType?
+    @Published var latestReadingFromOther: String?
+    @Published var latestReadingDate: Date?
+    @Published var deviceAddress: String?
 
     let onDelete = PassthroughSubject<Void, Never>()
     let onClose = PassthroughSubject<Void, Never>()

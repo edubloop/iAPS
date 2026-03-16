@@ -118,6 +118,14 @@ jobs:
       - name: Setup Ruby and project dependencies
         run: bash BuildTools/setup_common_env.sh
 
+      - name: Audit Ruby gem dependencies
+        # advisory only — custom fastlane fork (Artificial-Pancreas/fastlane) is a git source
+        # and will not appear in ruby-advisory-db; failures here are expected and non-blocking
+        continue-on-error: true
+        run: |
+          gem install bundler-audit --no-document
+          bundle audit check --update
+
       # Sync the GitHub runner clock with the Windows time server (workaround as suggested in https://github.com/actions/runner/issues/2996)
       - name: Sync clock
         run: sudo sntp -sS time.windows.com

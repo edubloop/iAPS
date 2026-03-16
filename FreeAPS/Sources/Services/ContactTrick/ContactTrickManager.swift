@@ -327,8 +327,7 @@ final class BaseContactTrickManager: NSObject, ContactTrickManager, Injectable {
 
 extension BaseContactTrickManager:
     SuggestionObserver,
-    SettingsObserver
-{
+    SettingsObserver {
     func suggestionDidUpdate(_: Suggestion) {
         renderContacts(forceSave: false)
     }

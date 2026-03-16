@@ -11,14 +11,12 @@ class AppSettings {
     func registerDefaultsFromSettingsBundle() {
         if let settingsURL = Bundle.main.url(forResource: "Root", withExtension: "plist", subdirectory: "Settings.bundle"),
            let settingsDict = NSDictionary(contentsOf: settingsURL) as? [String: Any],
-           let preferences = settingsDict["PreferenceSpecifiers"] as? [[String: Any]]
-        {
+           let preferences = settingsDict["PreferenceSpecifiers"] as? [[String: Any]] {
             var defaultsToRegister = [String: Any]()
             for preference in preferences {
                 // Extract the "Key" and "DefaultValue" for each setting.
                 if let key = preference["Key"] as? String,
-                   let defaultValue = preference["DefaultValue"]
-                {
+                   let defaultValue = preference["DefaultValue"] {
                     defaultsToRegister[key] = defaultValue
                 }
             }

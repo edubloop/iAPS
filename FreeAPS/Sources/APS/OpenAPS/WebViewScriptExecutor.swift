@@ -175,8 +175,7 @@ import WebKit
         if message.name == "jsBridge",
            let body = message.body as? [String: Any],
            let id = body["id"] as? String,
-           let continuation = continuationStreams.removeValue(forKey: id)
-        {
+           let continuation = continuationStreams.removeValue(forKey: id) {
             if let value = body["value"] as? RawJSON {
                 continuation.yield(value)
                 continuation.finish()

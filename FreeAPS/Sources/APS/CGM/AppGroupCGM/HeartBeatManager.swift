@@ -35,8 +35,7 @@ class HeartBeatManager {
         }
 
         if UserDefaults.standard.cgmTransmitterDeviceAddress != sharedUserDefaults
-            .string(forKey: keyForcgmTransmitterDeviceAddress)
-        {
+            .string(forKey: keyForcgmTransmitterDeviceAddress) {
             // assign local copy of cgmTransmitterDeviceAddress to the value stored in sharedUserDefaults (possibly nil value)
             UserDefaults.standard.cgmTransmitterDeviceAddress = sharedUserDefaults
                 .string(forKey: keyForcgmTransmitterDeviceAddress)
@@ -63,8 +62,7 @@ class HeartBeatManager {
         if let cgmTransmitterDeviceAddress = sharedData.string(forKey: keyForcgmTransmitterDeviceAddress) {
             // unwrap cgmTransmitter_CBUUID_Service and cgmTransmitter_CBUUID_Receive
             if let cgmTransmitter_CBUUID_Service = sharedData.string(forKey: keyForcgmTransmitter_CBUUID_Service),
-               let cgmTransmitter_CBUUID_Receive = sharedData.string(forKey: keycgmTransmitter_CBUUID_Receive)
-            {
+               let cgmTransmitter_CBUUID_Receive = sharedData.string(forKey: keycgmTransmitter_CBUUID_Receive) {
                 // a new cgm transmitter has been setup in xDrip4iOS
                 // we will connect to the same transmitter here so it can be used as heartbeat
                 let newBluetoothTransmitter = BluetoothTransmitter(

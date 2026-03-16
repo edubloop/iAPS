@@ -784,8 +784,7 @@ extension OverrideProfilesConfig {
 
                             if ((aisf.smbDeliveryRatioMin ?? 0.5) as Decimal) != standard
                                 .smbDeliveryRatioMin || ((aisf.smbDeliveryRatioMax ?? 0.5) as Decimal) != standard
-                                .smbDeliveryRatioMax
-                            {
+                                .smbDeliveryRatioMax {
                                 Text(
                                     "SMB ratio: \(aisf.smbDeliveryRatioMin ?? 0.5)-\(aisf.smbDeliveryRatioMax ?? 0.5)"
                                 )

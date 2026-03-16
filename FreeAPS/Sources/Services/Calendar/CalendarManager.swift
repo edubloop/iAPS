@@ -13,7 +13,7 @@ protocol CalendarManager {
 final class BaseCalendarManager: CalendarManager, Injectable {
     private lazy var eventStore: EKEventStore = { EKEventStore() }()
 
-    @Persisted(key: "CalendarManager.currentCalendarID") var currentCalendarID: String? = nil
+    @Persisted(key: "CalendarManager.currentCalendarID") var currentCalendarID: String?
     @Injected() private var settingsManager: SettingsManager!
     @Injected() private var broadcaster: Broadcaster!
     @Injected() private var glucoseStorage: GlucoseStorage!
@@ -35,7 +35,7 @@ final class BaseCalendarManager: CalendarManager, Injectable {
             switch status {
             case .notDetermined:
                 #if swift(>=5.9)
-                    EKEventStore().requestFullAccessToEvents(completion: { (granted: Bool, error: Error?) -> Void in
+                    EKEventStore().requestFullAccessToEvents(completion: { (granted: Bool, error: Error?) in
                         if let error = error {
                             warning(.service, "Calendar access not granted", error: error)
                         }
@@ -59,7 +59,7 @@ final class BaseCalendarManager: CalendarManager, Injectable {
                 case .fullAccess:
                     promise(.success(true))
                 case .writeOnly:
-                    EKEventStore().requestFullAccessToEvents(completion: { (granted: Bool, error: Error?) -> Void in
+                    EKEventStore().requestFullAccessToEvents(completion: { (granted: Bool, error: Error?) in
                         if let error = error {
                             print("Calendar access not upgraded")
                             warning(.service, "Calendar access not upgraded", error: error)

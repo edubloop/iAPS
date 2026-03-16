@@ -112,8 +112,7 @@ enum EventClassifier {
                segment: segment,
                iobHistory: iob,
                maxIOB: configuration.maxIOB
-           )
-        {
+           ) {
             return (
                 .constraintLimited,
                 constraint.confidence,

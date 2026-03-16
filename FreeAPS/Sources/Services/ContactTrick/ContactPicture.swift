@@ -99,8 +99,7 @@ struct ContactPicture: View {
             if contact.bottom != .none, contact.top == .none {
                 // move things around a little bit to give more space to the bottom area
                 if contact.ring1 == .iob || contact.ring1 == .cob || contact.ring1 == .iobcob ||
-                    (contact.bottom == .trend && contact.ring1 == .loop)
-                {
+                    (contact.bottom == .trend && contact.ring1 == .loop) {
                     bottomHeight = bottomHeight + height * ringWidth * 2
                     bottomWidth = bottomWidth + width * ringWidth * 2
                 } else if contact.ring1 == .loop {
@@ -343,10 +342,10 @@ struct ContactPicture: View {
         }
 
         text.draw(
-            in: CGRectMake(
-                rect.minX + (rect.width - stringSize.width) / 2,
-                rect.minY + (rect.height - stringSize.height) / 2,
-                rect.minX + stringSize.width,
+            in: CGRect(x: 
+                rect.minX + (rect.width - stringSize.width) / 2, y: 
+                rect.minY + (rect.height - stringSize.height) / 2, width: 
+                rect.minX + stringSize.width, height: 
                 rect.minY + stringSize.height
             ),
             withAttributes: attributes

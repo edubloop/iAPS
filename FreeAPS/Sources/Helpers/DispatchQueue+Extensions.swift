@@ -60,8 +60,7 @@ extension DispatchQueue {
     var isCurrentQueue: Bool {
         if let staticSpecific = DispatchQueue.currentLabel,
            let instanceSpecific = specificValue,
-           staticSpecific == instanceSpecific
-        {
+           staticSpecific == instanceSpecific {
             return true
         }
         return false

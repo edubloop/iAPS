@@ -128,7 +128,7 @@ final class AppGroupSource {
     private func parseDate(_ timestamp: String) -> Date? {
         // timestamp looks like "/Date(1462404576000)/"
         guard let re = try? NSRegularExpression(pattern: "\\((.*)\\)"),
-              let match = re.firstMatch(in: timestamp, range: NSMakeRange(0, timestamp.count))
+              let match = re.firstMatch(in: timestamp, range: NSRange(location: 0, length: timestamp.count))
         else {
             return nil
         }

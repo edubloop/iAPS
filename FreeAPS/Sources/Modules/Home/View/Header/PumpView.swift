@@ -48,8 +48,7 @@ struct PumpView: View {
         HStack(spacing: 5) {
             // OmniPods and Medtrum nanos
             if let pumpManager = state.deviceDataManager.pumpManager,
-               !pumpManager.isOnboarded
-            {
+               !pumpManager.isOnboarded {
                 Text("Re-connect pump!").font(.statusFont).foregroundStyle(.red)
                     .offset(y: -4)
             } else {
@@ -64,14 +63,12 @@ struct PumpView: View {
                                     .padding(.leading, (concentration.last?.concentration ?? 1) != 1 ? 7 : 0)
                                     .overlay {
                                         if let timeZone = timeZone,
-                                           timeZone.secondsFromGMT() != TimeZone.current.secondsFromGMT()
-                                        {
+                                           timeZone.secondsFromGMT() != TimeZone.current.secondsFromGMT() {
                                             ClockOffset(mdtPump: false)
                                         }
                                         if (concentration.last?.concentration ?? 1) != 1,
                                            !state.settingsManager.settings
-                                           .hideInsulinBadge
-                                        {
+                                           .hideInsulinBadge {
                                             NonStandardInsulin(
                                                 concentration: concentration.last?.concentration ?? 1,
                                                 pump: .medtrum
@@ -83,14 +80,12 @@ struct PumpView: View {
                                     .padding(.leading, (concentration.last?.concentration ?? 1) != 1 ? 7 : 0)
                                     .overlay {
                                         if let timeZone = timeZone,
-                                           timeZone.secondsFromGMT() != TimeZone.current.secondsFromGMT()
-                                        {
+                                           timeZone.secondsFromGMT() != TimeZone.current.secondsFromGMT() {
                                             ClockOffset(mdtPump: false)
                                         }
                                         if (concentration.last?.concentration ?? 1) != 1,
                                            !state.settingsManager.settings
-                                           .hideInsulinBadge
-                                        {
+                                           .hideInsulinBadge {
                                             NonStandardInsulin(concentration: concentration.last?.concentration ?? 1, pump: .pod)
                                         }
                                     }
@@ -108,13 +103,11 @@ struct PumpView: View {
                                     .padding(.leading, (concentration.last?.concentration ?? 1) != 1 ? 7 : 0)
                                     .overlay {
                                         if let timeZone = timeZone,
-                                           timeZone.secondsFromGMT() != TimeZone.current.secondsFromGMT()
-                                        {
+                                           timeZone.secondsFromGMT() != TimeZone.current.secondsFromGMT() {
                                             ClockOffset(mdtPump: false)
                                         }
                                         if (concentration.last?.concentration ?? 1) != 1,
-                                           !state.settingsManager.settings.hideInsulinBadge
-                                        {
+                                           !state.settingsManager.settings.hideInsulinBadge {
                                             NonStandardInsulin(
                                                 concentration: concentration.last?.concentration ?? 1,
                                                 pump: .medtrum
@@ -126,13 +119,11 @@ struct PumpView: View {
                                     .padding(.leading, (concentration.last?.concentration ?? 1) != 1 ? 7 : 0)
                                     .overlay {
                                         if let timeZone = timeZone,
-                                           timeZone.secondsFromGMT() != TimeZone.current.secondsFromGMT()
-                                        {
+                                           timeZone.secondsFromGMT() != TimeZone.current.secondsFromGMT() {
                                             ClockOffset(mdtPump: false)
                                         }
                                         if (concentration.last?.concentration ?? 1) != 1,
-                                           !state.settingsManager.settings.hideInsulinBadge
-                                        {
+                                           !state.settingsManager.settings.hideInsulinBadge {
                                             NonStandardInsulin(concentration: concentration.last?.concentration ?? 1, pump: .pod)
                                         }
                                     }

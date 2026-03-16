@@ -176,7 +176,7 @@ internal final class GradientGenerator {
 
 // MARK: - Color Data
 
-fileprivate struct ARGB {
+private struct ARGB {
     let a: UInt8 = 0xff
     var r: UInt8
     var g: UInt8
@@ -184,7 +184,7 @@ fileprivate struct ARGB {
 }
 
 extension ARGB: Equatable {
-    static func ==(lhs: ARGB, rhs: ARGB) -> Bool {
+    static func == (lhs: ARGB, rhs: ARGB) -> Bool {
         return (lhs.r == rhs.r && lhs.g == rhs.g && lhs.b == rhs.b)
     }
 }
@@ -214,10 +214,10 @@ extension ARGB {
 
 // MARK: - Utility
 
-fileprivate func lerp(_ t: Float, _ a: UInt8, _ b: UInt8) -> UInt8 {
+private func lerp(_ t: Float, _ a: UInt8, _ b: UInt8) -> UInt8 {
     return UInt8(Float(a) + min(max(t, 0), 1) * (Float(b) - Float(a)))
 }
 
-fileprivate func lerp(_ value: Float, inRange: ClosedRange<Float>, outRange: ClosedRange<Float>) -> Float {
+private func lerp(_ value: Float, inRange: ClosedRange<Float>, outRange: ClosedRange<Float>) -> Float {
     return (value - inRange.lowerBound) * (outRange.upperBound - outRange.lowerBound) / (inRange.upperBound - inRange.lowerBound) + outRange.lowerBound
 }

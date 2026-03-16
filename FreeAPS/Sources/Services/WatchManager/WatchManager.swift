@@ -455,8 +455,7 @@ extension BaseWatchManager: WCSessionDelegate {
         if let carbs = message["carbs"] as? Double,
            let fat = message["fat"] as? Double,
            let protein = message["protein"] as? Double,
-           carbs > 0 || fat > 0 || protein > 0
-        {
+           carbs > 0 || fat > 0 || protein > 0 {
             carbsStorage.storeCarbs(
                 [CarbsEntry(
                     id: UUID().uuidString,
@@ -576,8 +575,7 @@ extension BaseWatchManager:
     CarbsObserver,
     EnactedSuggestionObserver,
     PumpBatteryObserver,
-    PumpReservoirObserver
-{
+    PumpReservoirObserver {
     func glucoseDidUpdate(_: [BloodGlucose]) {
         configureState()
     }

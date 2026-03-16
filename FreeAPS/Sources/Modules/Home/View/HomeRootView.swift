@@ -623,8 +623,7 @@ extension Home {
                             let profile = fetchedProfiles.first(where: { $0.id == override.id })
                             if let currentProfile = profile {
                                 if let name = currentProfile.name, name != "EMPTY", name.nonEmpty != nil, name != "",
-                                   name != "\u{0022}\u{0022}"
-                                {
+                                   name != "\u{0022}\u{0022}" {
                                     if name.count > 15 {
                                         let shortened = name.prefix(15)
                                         Text(shortened).font(.statusFont).foregroundStyle(.secondary)
@@ -896,8 +895,7 @@ extension Home {
                                     Color.clear
                                         .onChange(of: scrollPosition) {
                                             if scrollPosition < yThreshold, state.iobs > 0 || state.carbData > 0,
-                                               !state.skipGlucoseChart
-                                            {
+                                               !state.skipGlucoseChart {
                                                 withAnimation(.easeOut(duration: 0.3)) { displayGlucose = true }
                                             } else {
                                                 withAnimation(.easeOut(duration: 0.4)) { displayGlucose = false }

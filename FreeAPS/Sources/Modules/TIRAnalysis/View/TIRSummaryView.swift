@@ -169,9 +169,7 @@ struct TIRSummaryView: View {
 
     private func coverageLabel(fraction: Double, available: Int, required: Int) -> String {
         let confidence: String
-        if fraction >= 0.8 { confidence = "High confidence" }
-        else if fraction >= 0.4 { confidence = "Medium confidence" }
-        else { confidence = "Low confidence" }
+        if fraction >= 0.8 { confidence = "High confidence" } else if fraction >= 0.4 { confidence = "Medium confidence" } else { confidence = "Low confidence" }
         return "\(available)/\(required) days · \(confidence)"
     }
 

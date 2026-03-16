@@ -76,8 +76,8 @@ extension Home {
         @Published var pumpExpiresAtDate: Date?
         @Published var tempTarget: TempTarget?
         @Published var setupPump = false
-        @Published var errorMessage: String? = nil
-        @Published var errorDate: Date? = nil
+        @Published var errorMessage: String?
+        @Published var errorDate: Date?
         @Published var bolusProgress: Decimal?
         @Published var bolusAmount: Decimal?
         @Published var eventualBG: Int?
@@ -353,8 +353,7 @@ extension Home {
             $setupPump
                 .sink { [weak self] show in
                     guard let self = self else { return }
-                    if show, let pumpManager = self.provider.deviceManager.pumpManager
-                    {
+                    if show, let pumpManager = self.provider.deviceManager.pumpManager {
                         if pumpManager.isOnboarded {
                             let view = PumpConfig.PumpSettingsView(
                                 pumpManager: pumpManager,
@@ -619,8 +618,7 @@ extension Home {
             if closedLoop,
                let enactedSuggestion = enactedSuggestion,
                let timestamp = enactedSuggestion.timestamp,
-               enactedSuggestion.deliverAt == suggestion.deliverAt, enactedSuggestion.recieved == true
-            {
+               enactedSuggestion.deliverAt == suggestion.deliverAt, enactedSuggestion.recieved == true {
                 statusTitle = NSLocalizedString("Enacted at", comment: "Headline in enacted pop up") + " " + dateFormatter
                     .string(from: timestamp)
             } else if let suggestedDate = suggestion.deliverAt {
@@ -786,8 +784,7 @@ extension Home.StateModel:
     EnactedSuggestionObserver,
     PumpBatteryObserver,
     PumpReservoirObserver,
-    PumpTimeZoneObserver
-{
+    PumpTimeZoneObserver {
     func glucoseDidUpdate(_: [BloodGlucose]) {
         setNeedsRefresh([.glucose, .loopStats])
     }

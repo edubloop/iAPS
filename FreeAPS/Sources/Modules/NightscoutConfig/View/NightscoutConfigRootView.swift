@@ -77,8 +77,7 @@ extension NightscoutConfig {
                 if let cgmManager = state.deviceManager.cgmManager,
                    KnownPlugins.glucoseUploadingAvailable(for: cgmManager),
                    !cgmManager.shouldSyncToRemoteService,
-                   state.isUploadEnabled
-                {
+                   state.isUploadEnabled {
                     Section {
                         HStack {
                             Text("Glucose upload disabled in CGM settings").foregroundStyle(.red)
@@ -97,8 +96,7 @@ extension NightscoutConfig {
                 if let cgmManager = state.deviceManager.cgmManager,
                    KnownPlugins.glucoseUploadingAvailable(for: cgmManager),
                    !cgmManager.shouldSyncToRemoteService,
-                   state.isUploadEnabled
-                {
+                   state.isUploadEnabled {
                     Section {
                         HStack {
                             Text("Glucose upload disabled in CGM settings").foregroundStyle(.red)

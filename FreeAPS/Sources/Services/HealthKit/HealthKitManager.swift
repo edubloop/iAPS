@@ -127,7 +127,7 @@ final class BaseHealthKitManager: HealthKitManager, Injectable {
                         ]
                     )
                 }
-            healthKitStore.save(samplesToSave) { (success: Bool, error: Error?) -> Void in
+            healthKitStore.save(samplesToSave) { (success: Bool, error: Error?) in
                 if !success, let error = error {
                     debug(.service, "Failed to store blood glucose in HealthKit Store! Error: " + error.localizedDescription)
                 }
@@ -173,7 +173,7 @@ final class BaseHealthKitManager: HealthKitManager, Injectable {
                     )
                 }
 
-            healthKitStore.save(samplesToSave) { (success: Bool, error: Error?) -> Void in
+            healthKitStore.save(samplesToSave) { (success: Bool, error: Error?) in
                 if !success, let error = error {
                     debug(.service, "Failed to store carb entry in HealthKit Store! Error: " + error.localizedDescription)
                 }
@@ -244,7 +244,7 @@ final class BaseHealthKitManager: HealthKitManager, Injectable {
                     )
                 }
 
-            healthKitStore.save(bolusSamples + basalSamples) { (success: Bool, error: Error?) -> Void in
+            healthKitStore.save(bolusSamples + basalSamples) { (success: Bool, error: Error?) in
                 if !success, let error = error {
                     debug(.service, "Failed to store insulin entry in HealthKit Store! Error: " + error.localizedDescription)
                 }

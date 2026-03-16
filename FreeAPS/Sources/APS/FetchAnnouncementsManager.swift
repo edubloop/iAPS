@@ -53,8 +53,7 @@ final class BaseFetchAnnouncementsManager: FetchAnnouncementsManager, Injectable
                 self.announcementsStorage.storeAnnouncements([last], enacted: false)
 
                 if self.settingsManager.settings.allowAnnouncements, let recent = self.announcementsStorage.recent(),
-                   recent.action != nil
-                {
+                   recent.action != nil {
                     debug(
                         .nightscout,
                         "New announcements found, time: \(Date.now.formatted(date: .omitted, time: .shortened))"

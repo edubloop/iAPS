@@ -193,8 +193,7 @@ final class LiveActivityBridge: Injectable, ObservableObject, SettingsObserver {
         if let knownSettings = self.knownSettings {
             if newSettings.useLiveActivity != knownSettings.useLiveActivity ||
                 newSettings.liveActivityChart != knownSettings.liveActivityChart ||
-                newSettings.liveActivityChartShowPredictions != knownSettings.liveActivityChartShowPredictions
-            {
+                newSettings.liveActivityChartShowPredictions != knownSettings.liveActivityChartShowPredictions {
                 print("live activity settings changed")
                 forceActivityUpdate(force: true)
             }
@@ -221,8 +220,7 @@ final class LiveActivityBridge: Injectable, ObservableObject, SettingsObserver {
         // only do this if there is no current activity or the current activity is older than 1h
         if settings.useLiveActivity {
             if force || currentActivity?.needsRecreation() ?? true,
-               let suggestion = storage.retrieveFile(OpenAPS.Enact.suggested, as: Suggestion.self)
-            {
+               let suggestion = storage.retrieveFile(OpenAPS.Enact.suggested, as: Suggestion.self) {
                 suggestionDidUpdate(suggestion)
             }
         } else {
@@ -236,8 +234,7 @@ final class LiveActivityBridge: Injectable, ObservableObject, SettingsObserver {
     @MainActor private func pushUpdate(_ state: LiveActivityAttributes.ContentState) async {
         // hide duplicate/unknown activities
         for unknownActivity in Activity<LiveActivityAttributes>.activities
-            .filter({ self.currentActivity?.activity.id != $0.id })
-        {
+            .filter({ self.currentActivity?.activity.id != $0.id }) {
             await unknownActivity.end(nil, dismissalPolicy: .immediate)
         }
 

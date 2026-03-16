@@ -17,8 +17,7 @@ extension AppGroupCGM: CGMManagerUI {
         colorPalette _: LoopKitUI.LoopUIColorPalette,
         allowDebugFeatures _: Bool,
         prefersToSkipUserInteraction _: Bool
-    ) -> LoopKitUI.SetupUIResult<LoopKitUI.CGMManagerViewController, LoopKitUI.CGMManagerUI>
-    {
+    ) -> LoopKitUI.SetupUIResult<LoopKitUI.CGMManagerViewController, LoopKitUI.CGMManagerUI> {
         .createdAndOnboarded(AppGroupCGM())
     }
 
@@ -27,8 +26,7 @@ extension AppGroupCGM: CGMManagerUI {
         displayGlucosePreference: DisplayGlucosePreference,
         colorPalette _: LoopUIColorPalette,
         allowDebugFeatures _: Bool
-    ) -> CGMManagerViewController
-    {
+    ) -> CGMManagerViewController {
         let settings = AppGroupCGMSettingsViewController(cgmManager: self, displayGlucosePreference: displayGlucosePreference)
         let nav = CGMManagerSettingsNavigationViewController(rootViewController: settings)
         return nav

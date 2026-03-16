@@ -543,8 +543,7 @@ final class BaseNightscoutManager: NightscoutManager, Injectable {
     func uploadPodAge() {
         let uploadedPodAge = storage.retrieve(OpenAPS.Nightscout.uploadedPodAge, as: [NigtscoutTreatment].self) ?? []
         if let podAge = storage.retrieve(OpenAPS.Monitor.podAge, as: Date.self),
-           uploadedPodAge.last?.createdAt == nil || podAge != uploadedPodAge.last!.createdAt!
-        {
+           uploadedPodAge.last?.createdAt == nil || podAge != uploadedPodAge.last!.createdAt! {
             let siteTreatment = NigtscoutTreatment(
                 duration: nil,
                 rawDuration: nil,
@@ -664,8 +663,7 @@ final class BaseNightscoutManager: NightscoutManager, Injectable {
         var carbs_hr: Decimal = 0
         if let isf = sensitivities?.sensitivities.map(\.sensitivity).first,
            let cr = carbRatios?.schedule.map(\.ratio).first,
-           isf > 0, cr > 0
-        {
+           isf > 0, cr > 0 {
             // CarbImpact -> Carbs/hr = CI [mg/dl/5min] * 12 / ISF [mg/dl/U] * CR [g/U]
             carbs_hr = settingsManager.preferences.min5mCarbimpact * 12 / isf * cr
             if settingsManager.settings.units == .mmolL {
@@ -720,8 +718,7 @@ final class BaseNightscoutManager: NightscoutManager, Injectable {
 
             // UPLOAD Profiles WHEN CHANGED
             if let uploadedProfile = storage.retrieveFile(OpenAPS.Nightscout.uploadedProfile, as: NightscoutProfileStore.self),
-               (uploadedProfile.store["default"]?.rawJSON ?? "").sorted() == ps.rawJSON.sorted(), !force
-            {
+               (uploadedProfile.store["default"]?.rawJSON ?? "").sorted() == ps.rawJSON.sorted(), !force {
                 NSLog("NightscoutManager uploadProfile, no profile change")
             } else {
                 if let ns = nightscoutAPI, isUploadEnabled {
@@ -746,8 +743,7 @@ final class BaseNightscoutManager: NightscoutManager, Injectable {
                 OpenAPS.Nightscout.uploadedProfileToDatabase,
                 as: DatabaseProfileStore.self
             ),
-                (uploadedProfile.store["default"]?.rawJSON ?? "").sorted() == ps.rawJSON.sorted(), !force
-            {
+                (uploadedProfile.store["default"]?.rawJSON ?? "").sorted() == ps.rawJSON.sorted(), !force {
                 NSLog("NightscoutManager uploadProfile to database, no profile change")
             } else {
                 if isStatsUploadEnabled {
@@ -772,11 +768,9 @@ final class BaseNightscoutManager: NightscoutManager, Injectable {
         // UPLOAD PREFERNCES WHEN CHANGED
         if isStatsUploadEnabled || force {
             if let uploadedPreferences = storage.retrieveFile(OpenAPS.Nightscout.uploadedPreferences, as: Preferences.self),
-               let unWrappedPreferences = preferences
-            {
+               let unWrappedPreferences = preferences {
                 if uploadedPreferences.rawJSON.sorted() != unWrappedPreferences.rawJSON.sorted() ||
-                    force
-                {
+                    force {
                     let prefs = NightscoutPreferences(preferences: unWrappedPreferences, enteredBy: token, profile: name)
                     uploadPreferences(prefs)
                 } else {
@@ -791,8 +785,7 @@ final class BaseNightscoutManager: NightscoutManager, Injectable {
         // UPLOAD FreeAPS Settings WHEN CHANGED
         if isStatsUploadEnabled || force {
             if let uploadedSettings = storage.retrieve(OpenAPS.Nightscout.uploadedSettings, as: FreeAPSSettings.self),
-               let unwrappedSettings = settings, uploadedSettings.rawJSON.sorted() == unwrappedSettings.rawJSON.sorted(), !force
-            {
+               let unwrappedSettings = settings, uploadedSettings.rawJSON.sorted() == unwrappedSettings.rawJSON.sorted(), !force {
                 NSLog("NightscoutManager Settings, settings unchanged")
             } else {
                 let sets = NightscoutSettings(
@@ -806,8 +799,7 @@ final class BaseNightscoutManager: NightscoutManager, Injectable {
         if isStatsUploadEnabled || force {
             if let pumpSettings = storage.retrieveFile(OpenAPS.Settings.settings, as: PumpSettings.self) {
                 if let uploadedSettings = storage.retrieve(OpenAPS.Nightscout.uploadedPumpSettings, as: PumpSettings.self),
-                   uploadedSettings.rawJSON.sorted() == pumpSettings.rawJSON.sorted(), !force
-                {
+                   uploadedSettings.rawJSON.sorted() == pumpSettings.rawJSON.sorted(), !force {
                     NSLog("PumpSettings unchanged")
                 } else { uploadPumpSettingsToDatabase(pumpSettings, token: token, name: name) }
 
@@ -823,8 +815,7 @@ final class BaseNightscoutManager: NightscoutManager, Injectable {
                     OpenAPS.Nightscout.uploadedTempTargetsDatabase,
                     as: [TempTarget].self
                 ),
-                    uploadedTempTargets.rawJSON.sorted() == tempTargets.rawJSON.sorted(), !force
-                {
+                    uploadedTempTargets.rawJSON.sorted() == tempTargets.rawJSON.sorted(), !force {
                     NSLog("Temp targets unchanged")
                 } else { uploadTempTargetsToDatabase(tempTargets, token: token, name: name) }
 
@@ -838,8 +829,7 @@ final class BaseNightscoutManager: NightscoutManager, Injectable {
             let mealPresets = Database(token: token).mealPresetDatabaseUpload(profile: name, token: token)
             if !mealPresets.presets.isEmpty {
                 if let uploadedMealPresets = storage.retrieveFile(OpenAPS.Nightscout.uploadedMealPresets, as: MealDatabase.self),
-                   mealPresets.rawJSON.sorted() == uploadedMealPresets.rawJSON.sorted(), !force
-                {
+                   mealPresets.rawJSON.sorted() == uploadedMealPresets.rawJSON.sorted(), !force {
                     NSLog("Meal Presets unchanged")
                 } else {
                     uploadMealPresetsToDatabase(mealPresets, token: token)
@@ -855,8 +845,7 @@ final class BaseNightscoutManager: NightscoutManager, Injectable {
                     OpenAPS.Nightscout.uploadedOverridePresets,
                     as: OverrideDatabase.self
                 ),
-                    overridePresets.rawJSON.sorted() == uploadedOverridePresets.rawJSON.sorted(), !force
-                {
+                    overridePresets.rawJSON.sorted() == uploadedOverridePresets.rawJSON.sorted(), !force {
                     NSLog("Override Presets unchanged")
                 } else {
                     uploadOverridePresetsToDatabase(overridePresets, token: token)

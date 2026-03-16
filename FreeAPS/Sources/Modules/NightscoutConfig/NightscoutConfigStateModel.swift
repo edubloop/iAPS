@@ -150,8 +150,7 @@ extension NightscoutConfig {
                 let jsonDecoder = JSONCoding.decoder
 
                 if let mimeType = httpResponse.mimeType, mimeType == "application/json",
-                   let data = data
-                {
+                   let data = data {
                     do {
                         let fetchedProfileStore = try jsonDecoder.decode([FetchedNightscoutProfileStore].self, from: data)
                         guard let fetchedProfile: ScheduledNightscoutProfile = fetchedProfileStore.first?.store["default"]
@@ -194,8 +193,7 @@ extension NightscoutConfig {
                         let pumpName = self.apsManager.pumpName.value
                         let basals = fetchedProfile.basal
                             .map { basal -> BasalProfileEntry in
-                                if pumpName != "Omnipod DASH", basal.value <= 0
-                                {
+                                if pumpName != "Omnipod DASH", basal.value <= 0 {
                                     error =
                                         "\nInvalid Nightcsout Basal Settings. Some or all of your basal settings are 0 U/h.\n\nImport aborted. Please check your Nightscout Profile Basal Settings before trying to import again. Import has been aborted.)"
                                     areBasalsOK = false
@@ -206,8 +204,7 @@ extension NightscoutConfig {
                                     rate: basal.value
                                 ) }
                         // DASH pumps can have 0U/h basal rates but don't import if total basals (24 hours) amount to 0 U.
-                        if pumpName == "Omnipod DASH", basals.map({ each in each.rate }).reduce(0, +) <= 0
-                        {
+                        if pumpName == "Omnipod DASH", basals.map({ each in each.rate }).reduce(0, +) <= 0 {
                             error =
                                 "\nYour total Basal insulin amount to 0 U or lower in Nightscout Profile settings.\n\n Please check your Nightscout Profile Basal Settings before trying to import again. Import has been aborted.)"
                             areBasalsOK = false

@@ -25,8 +25,7 @@ extension CGM {
             NavigationView {
                 Form {
                     if let cgmManager = state.deviceManager.cgmManager as? CGMManagerUI,
-                       cgmManager.isOnboarded
-                    {
+                       cgmManager.isOnboarded {
                         Section(header: Text("Active CGM")) {
                             HStack {
                                 Text("Type")
@@ -84,16 +83,13 @@ extension CGM {
                     }
 
                     if let cgmManager = state.deviceManager.cgmManager,
-                       cgmManager.isOnboarded
-                    {
-                        if KnownPlugins.allowCalibrations(for: cgmManager)
-                        {
+                       cgmManager.isOnboarded {
+                        if KnownPlugins.allowCalibrations(for: cgmManager) {
                             Text("Calibrations").navigationLink(to: .calibrations, from: self)
                         }
 
                         // if CGM/App is selected but sensor life-span is not known...
-                        if KnownPlugins.cgmExpirationByPluginIdentifier(state.deviceManager.cgmManager) == nil
-                        {
+                        if KnownPlugins.cgmExpirationByPluginIdentifier(state.deviceManager.cgmManager) == nil {
                             Section {
                                 HStack {
                                     TextField("0", value: $state.sensorDays, formatter: daysFormatter)
@@ -128,8 +124,7 @@ extension CGM {
                 .sheet(isPresented: $state.cgmSettingsPresented) {
                     if let identifier = state.cgmIdentifierToSetUp,
                        let cgmManager = state.deviceManager.cgmManager as? CGMManagerUI,
-                       cgmManager.pluginIdentifier == identifier
-                    {
+                       cgmManager.pluginIdentifier == identifier {
                         CGMSettingsView(
                             cgmManager: cgmManager,
                             deviceManager: state.deviceManager,

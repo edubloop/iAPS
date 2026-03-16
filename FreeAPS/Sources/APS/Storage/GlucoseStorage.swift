@@ -122,8 +122,7 @@ final class BaseGlucoseStorage: GlucoseStorage, Injectable {
 
                     // We have to keep quite a bit of history as sensors start only every 10 days.
                     storage.save(
-                        treatments.filter
-                            { $0.createdAt != nil && $0.createdAt!.addingTimeInterval(30.days.timeInterval) > Date() },
+                        treatments.filter { $0.createdAt != nil && $0.createdAt!.addingTimeInterval(30.days.timeInterval) > Date() },
                         as: file
                     )
                 }
@@ -218,15 +217,13 @@ final class BaseGlucoseStorage: GlucoseStorage, Injectable {
         }
 
         if let direction = glucose.direction, direction == .doubleDown || direction == .singleDown,
-           Decimal(glucoseValue) < settingsManager.settings.highGlucose
-        {
+           Decimal(glucoseValue) < settingsManager.settings.highGlucose {
             return .descending
         }
 
         if let direction = glucose.direction, direction == .doubleUp || direction == .singleUp,
            Decimal(glucoseValue) > settingsManager.settings.lowGlucose,
-           Decimal(glucoseValue) < settingsManager.settings.highGlucose
-        {
+           Decimal(glucoseValue) < settingsManager.settings.highGlucose {
             return .ascending
         }
 

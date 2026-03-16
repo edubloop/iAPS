@@ -28,8 +28,7 @@ struct TagCloudView: View {
                 self.item(for: tag)
                     .padding([.horizontal, .vertical], 2)
                     .alignmentGuide(.leading, computeValue: { d in
-                        if abs(width - d.width) > g.size.width
-                        {
+                        if abs(width - d.width) > g.size.width {
                             width = 0
                             height -= d.height
                         }

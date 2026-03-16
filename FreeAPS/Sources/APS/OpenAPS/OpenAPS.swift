@@ -122,8 +122,7 @@ final class OpenAPS {
                     now = Date.now
                     // Auto ISF Layer
                     if let freeAPSSettings = settings, freeAPSSettings.autoisf || self.autoISF(override: override),
-                       self.notDisabled(override: override)
-                    {
+                       self.notDisabled(override: override) {
                         now = Date.now
                         profile = await self.autosisf(
                             glucose: glucose,
@@ -165,8 +164,7 @@ final class OpenAPS {
                             if mySettings.ketoProtect, iob < 0,
                                let rate = suggestion.rate, rate <= 0,
                                let basal = self.readBasal(alteredProfile), iob < -basal, (suggestion.units ?? 0) <= 0,
-                               let basalRate = self.aisfBasal(mySettings, basal, oref0Suggestion: suggestion)
-                            {
+                               let basalRate = self.aisfBasal(mySettings, basal, oref0Suggestion: suggestion) {
                                 suggestion = basalRate
                             }
                         }
@@ -499,13 +497,11 @@ final class OpenAPS {
             }
             // Auto ISF
             if let freeAPSSettings = settings, freeAPSSettings.autoisf,
-               self.notDisabled(override: override) || autoISF(override: override)
-            {
+               self.notDisabled(override: override) || autoISF(override: override) {
                 let reasons = profile.autoISFreasons ?? ""
                 // If disabled in middleware or Auto ISF layer
                 if let disabled = readAndExclude(json: profile, variable: "autoisf", exclude: "autoisf_m"),
-                   let value = Bool(disabled), !value
-                {
+                   let value = Bool(disabled), !value {
                     reasonString.insert(
                         contentsOf: "Autosens Ratio: \(isf)" + tddString + ", \(reasons), ",
                         at: startIndex
@@ -541,23 +537,20 @@ final class OpenAPS {
             // Include ISF before eventual adjustment
             if let old = readMiddleware(json: profile, variable: "old_isf"),
                let new = readReason(reason: reason, variable: "ISF"),
-               let oldISF = trimmedIsEqual(string: old, decimal: new)
-            {
+               let oldISF = trimmedIsEqual(string: old, decimal: new) {
                 reasonString = reasonString.replacingOccurrences(of: "ISF:", with: "ISF: \(oldISF) →")
             }
 
             // Include CR before eventual adjustment
             if let old = readMiddleware(json: profile, variable: "old_cr"),
                let new = readReason(reason: reason, variable: "CR"),
-               let oldCR = trimmedIsEqual(string: old, decimal: new)
-            {
+               let oldCR = trimmedIsEqual(string: old, decimal: new) {
                 reasonString = reasonString.replacingOccurrences(of: "CR:", with: "CR: \(oldCR) →")
             }
 
             // Before and after eventual Basal adjustment
             if let index = reasonString.firstIndex(of: ";"),
-               let basalAdjustment = basalAdjustment(profile: profile, ratio: isf)
-            {
+               let basalAdjustment = basalAdjustment(profile: profile, ratio: isf) {
                 reasonString.insert(
                     contentsOf: basalAdjustment,
                     at: index
@@ -588,16 +581,14 @@ final class OpenAPS {
 
         // SMB Delivery ratio
         if targetGlucose != nil, let smbRatio = readJSON(json: profile, variable: "smb_delivery_ratio"),
-           let value = Decimal(string: smbRatio), value != 0.5
-        {
+           let value = Decimal(string: smbRatio), value != 0.5 {
             let index = reasonString.firstIndex(of: ";") ?? reasonString.index(reasonString.startIndex, offsetBy: 0)
             reasonString.insert(contentsOf: ", SMB Ratio: \(smbRatio)", at: index)
         }
 
         // Middleware
         if targetGlucose != nil, let middlewareString = readMiddleware(json: profile, variable: "mw"),
-           middlewareString.count > 2
-        {
+           middlewareString.count > 2 {
             let index = reasonString.firstIndex(of: ";") ?? reasonString.index(reasonString.startIndex, offsetBy: 0)
             if middlewareString != "Nothing changed" {
                 reasonString.insert(contentsOf: ", Middleware: \(middlewareString)", at: index)
@@ -615,8 +606,7 @@ final class OpenAPS {
             if let isf = readReason(reason: reason, variable: "ISF"),
                let minPredBG = readReason(reason: reason, variable: "minPredBG"),
                let cr = readReason(reason: reason, variable: "CR"),
-               let iob = suggestion.iob, let cob = suggestion.cob, let target = targetGlucose
-            {
+               let iob = suggestion.iob, let cob = suggestion.cob, let target = targetGlucose {
                 var aisfReasons: String?
                 if aisf {
                     // Save AISF output
@@ -772,8 +762,7 @@ final class OpenAPS {
     private func readAndExclude(json: RawJSON, variable: String, exclude: String) -> String? {
         if let string = json.debugDescription.components(separatedBy: ",")
             .filter({ $0.contains(variable) && !$0.contains(exclude) })
-            .first
-        {
+            .first {
             let targetComponents = string.components(separatedBy: ":")
             if targetComponents.count == 2 {
                 let trimmedString = targetComponents[1].trimmingCharacters(in: .whitespaces)
@@ -808,8 +797,7 @@ final class OpenAPS {
 
     private func readBasal(_ profile: String) -> Decimal? {
         if let string = profile.components(separatedBy: ",")
-            .filter({ !$0.contains("current_basal_safety_multiplier") && $0.contains("current_basal") }).first
-        {
+            .filter({ !$0.contains("current_basal_safety_multiplier") && $0.contains("current_basal") }).first {
             let targetComponents = string.components(separatedBy: ":")
             if targetComponents.count == 2 {
                 let trimmedString = targetComponents[1].trimmingCharacters(in: .whitespaces)
@@ -947,8 +935,7 @@ final class OpenAPS {
                 // End with new Meal, when applicable
                 if useOverride, overrideArray.first?.advancedSettings ?? false, overrideArray.first?.endWIthNewCarbs ?? false,
                    let recent = cd.recentMeal(), !unchanged(meal: recent),
-                   (recent.actualDate ?? .distantPast) > (overrideArray.first?.date ?? .distantFuture)
-                {
+                   (recent.actualDate ?? .distantPast) > (overrideArray.first?.date ?? .distantFuture) {
                     useOverride = false
                     if OverrideStorage().cancelProfile() != nil {
                         debug(
@@ -964,8 +951,7 @@ final class OpenAPS {
                    g.direction ?? BloodGlucose.Direction.fortyFiveDown.symbol == BloodGlucose.Direction.fortyFiveUp.symbol || g
                    .direction ?? BloodGlucose
                    .Direction.singleDown.symbol == BloodGlucose.Direction.singleUp.symbol || g.direction ?? BloodGlucose
-                   .Direction.doubleDown.symbol == BloodGlucose.Direction.doubleUp.symbol
-                {
+                   .Direction.doubleDown.symbol == BloodGlucose.Direction.doubleUp.symbol {
                     useOverride = false
                     let storage = OverrideStorage()
                     if let duration = storage.cancelProfile() {
@@ -984,8 +970,7 @@ final class OpenAPS {
                 // End with new glucose when lower than setting, when applicable
                 if useOverride, overrideArray.first?.glucoseOverrideThresholdActiveDown ?? false, let g = cd.fetchRecentGlucose(),
                    Decimal(g.glucose) <
-                   ((overrideArray.first?.glucoseOverrideThresholdDown ?? 90) as NSDecimalNumber) as Decimal
-                {
+                   ((overrideArray.first?.glucoseOverrideThresholdDown ?? 90) as NSDecimalNumber) as Decimal {
                     useOverride = false
                     let storage = OverrideStorage()
                     if let duration = OverrideStorage().cancelProfile() {
@@ -1034,8 +1019,7 @@ final class OpenAPS {
             // Auto ISF
             var autoISFsettings = AutoISFsettings()
             if useOverride, overrideArray.first?.overrideAutoISF ?? false,
-               let fetched = OverrideStorage().fetchAutoISFsetting(id: overrideArray.first?.id ?? "Not This One")
-            {
+               let fetched = OverrideStorage().fetchAutoISFsetting(id: overrideArray.first?.id ?? "Not This One") {
                 autoISFsettings = AutoISFsettings(
                     autoisf: fetched.autoisf,
                     autocr: fetched.autocr,

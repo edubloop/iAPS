@@ -107,7 +107,7 @@ final class BaseDeviceDataManager: Injectable, DeviceDataManager {
 
     @Injected() private var displayGlucosePreference: DisplayGlucosePreference!
 
-    @Persisted(key: "BaseDeviceDataManager.lastEventDate") var lastEventDate: Date? = nil
+    @Persisted(key: "BaseDeviceDataManager.lastEventDate") var lastEventDate: Date?
 
     let bolusTrigger = PassthroughSubject<Bool, Never>()
     let errorSubject = PassthroughSubject<Error, Never>()
@@ -379,8 +379,7 @@ final class BaseDeviceDataManager: Injectable, DeviceDataManager {
     }
 
     func setupCGMManager(withIdentifier identifier: String, prefersToSkipUserInteraction: Bool = false) -> Swift
-        .Result<SetupUIResult<CGMManagerViewController, CGMManager>, Error>
-    {
+        .Result<SetupUIResult<CGMManagerViewController, CGMManager>, Error> {
         if let cgmManager = setupCGMManagerFromPumpManager(withIdentifier: identifier) {
             return .success(.createdAndOnboarded(cgmManager))
         }
@@ -430,8 +429,7 @@ final class BaseDeviceDataManager: Injectable, DeviceDataManager {
     struct UnknownCGMManagerIdentifierError: Error {}
 
     fileprivate func setupCGMManagerUI(withIdentifier identifier: String, prefersToSkipUserInteraction: Bool) -> Swift
-        .Result<SetupUIResult<CGMManagerViewController, CGMManagerUI>, Error>
-    {
+        .Result<SetupUIResult<CGMManagerViewController, CGMManagerUI>, Error> {
         guard let cgmManagerUIType = cgmManagerTypeByIdentifier(identifier) else {
             return .failure(UnknownCGMManagerIdentifierError())
         }

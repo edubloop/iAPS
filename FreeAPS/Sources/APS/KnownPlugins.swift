@@ -97,8 +97,7 @@ enum KnownPlugins {
             if let omnipod = pumpManager as? OmnipodPumpManager,
                let tempBasal = omnipod.state.podState?.unfinalizedTempBasal,
                !tempBasal.isFinished(),
-               !tempBasal.automatic
-            {
+               !tempBasal.automatic {
                 return true
             } else {
                 return false
@@ -107,8 +106,7 @@ enum KnownPlugins {
             if let omnipodBLE = pumpManager as? OmniBLEPumpManager,
                let tempBasal = omnipodBLE.state.podState?.unfinalizedTempBasal,
                !tempBasal.isFinished(),
-               !tempBasal.automatic
-            {
+               !tempBasal.automatic {
                 return true
             } else {
                 return false
@@ -183,8 +181,7 @@ enum KnownPlugins {
             var description = "Group ID: \(Bundle.main.appGroupSuiteName ?? "Not set")"
             if let cgmManager = cgmManager as? AppGroupCGM,
                let app = cgmManager.appGroupSource.latestReadingFrom?.displayName ?? cgmManager.appGroupSource
-               .latestReadingFromOther
-            {
+               .latestReadingFromOther {
                 description = "\(description), app: \(app)"
             }
             return GlucoseSourceInfo(description: description, transmitterBattery: nil)

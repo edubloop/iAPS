@@ -16,7 +16,7 @@ extension CalendarShare {
         @Published var displayCalendarEmojis = false
         @Published var calendarIDs: [String] = []
         @Published var currentCalendarID: String = ""
-        @Persisted(key: "CalendarManager.currentCalendarID") var storedCalendarID: String? = nil
+        @Persisted(key: "CalendarManager.currentCalendarID") var storedCalendarID: String?
 
         override func subscribe() {
             currentCalendarID = storedCalendarID ?? ""

@@ -106,9 +106,9 @@ struct BloodGlucose: JSON, Identifiable, Hashable, Codable {
     let noise: Int?
     var glucose: Int?
     let type: String?
-    var activationDate: Date? = nil
-    var sessionStartDate: Date? = nil
-    var transmitterID: String? = nil
+    var activationDate: Date?
+    var sessionStartDate: Date?
+    var transmitterID: String?
 
     var isStateValid: Bool { sgv ?? 0 >= 39 && noise ?? 1 != 4 }
 

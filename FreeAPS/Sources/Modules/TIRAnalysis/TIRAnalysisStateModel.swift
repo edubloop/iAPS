@@ -11,20 +11,20 @@ extension TIRAnalysis {
         // MARK: - Published state
 
         /// The most recent analysis result. nil until triggerAnalysis() completes.
-        @Published var analysisResult: TIRAnalysisResult? = nil
+        @Published var analysisResult: TIRAnalysisResult?
 
         /// True while an analysis run is in progress.
         @Published var isAnalyzing: Bool = false
 
         /// Non-nil when the most recent analysis completed with data-source warnings.
         /// nil when analysis succeeded cleanly or has not yet run.
-        @Published var analysisError: String? = nil
+        @Published var analysisError: String?
 
         /// Analysis window in days. Supported values: 7, 14, 30.
         @Published var windowDays: Int = 7
 
         /// Static settings-risk audit report (Track 4).
-        @Published var auditReport: TIRSettingsAuditReport? = nil
+        @Published var auditReport: TIRSettingsAuditReport?
 
         // MARK: - Actions
 

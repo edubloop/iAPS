@@ -85,9 +85,9 @@ struct MainChartView: View {
     @State var didAppearTrigger = false
     @State private var glucoseDots: [(rect: CGRect, glucose: Int?)] = []
     @State private var activityDots: [CGPoint] = []
-    @State private var activityZeroPointY: CGFloat? = nil
+    @State private var activityZeroPointY: CGFloat?
     @State private var cobDots: [(CGPoint, IOBData)] = []
-    @State private var cobZeroPointY: CGFloat? = nil
+    @State private var cobZeroPointY: CGFloat?
     @State private var manualGlucoseDots: [CGRect] = []
     @State private var announcementDots: [AnnouncementDot] = []
     @State private var announcementPath = Path()
@@ -113,7 +113,7 @@ struct MainChartView: View {
     @State private var peakActivity_1unit: Double = 0.0
     @State private var peakActivity_maxBolus: Double = 0.0
     @State private var peakActivity_maxIOB: Double = 0.0
-    @State private var maxActivityInData: Decimal? = nil
+    @State private var maxActivityInData: Decimal?
 
     private let calculationQueue = DispatchQueue(label: "MainChartView.calculationQueue")
 
@@ -414,8 +414,7 @@ struct MainChartView: View {
                 ZStack {
                     xGridView(fullSize: fullSize)
                     bolusView(fullSize: fullSize)
-                    if data.smooth { unSmoothedGlucoseView(fullSize: fullSize) }
-                    else { connectingGlucoseLinesView(fullSize: fullSize) }
+                    if data.smooth { unSmoothedGlucoseView(fullSize: fullSize) } else { connectingGlucoseLinesView(fullSize: fullSize) }
                     glucoseView(fullSize: fullSize)
                     lowGlucoseView(fullSize: fullSize)
                     highGlucoseView(fullSize: fullSize)
@@ -514,8 +513,7 @@ struct MainChartView: View {
         Path { path in
             for rect in glucoseDots {
                 if let glucose = rect.glucose, Decimal(glucose) > data.lowGlucose,
-                   Decimal(glucose) < data.highGlucose
-                {
+                   Decimal(glucose) < data.highGlucose {
                     path.addEllipse(in: rect.rect)
                 }
             }

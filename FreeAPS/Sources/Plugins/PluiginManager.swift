@@ -14,11 +14,10 @@ class PluginManager {
         if let pluginsURL = pluginsURL {
             do {
                 for pluginURL in try FileManager.default.contentsOfDirectory(at: pluginsURL, includingPropertiesForKeys: nil)
-                    .filter({ $0.path.hasSuffix(".framework") })
-                {
+                    .filter({ $0.path.hasSuffix(".framework") }) {
                     if let bundle = Bundle(url: pluginURL) {
                         if bundle.isLoopPlugin, !bundle.isSimulator /* || FeatureFlags.allowSimulators*/ {
-                            log.debug("Found loop plugin: \(pluginURL.absoluteString)",)
+                            log.debug("Found loop plugin: \(pluginURL.absoluteString)", )
                             bundles.append(bundle)
                         }
                     }
@@ -33,8 +32,7 @@ class PluginManager {
     func getPumpManagerTypeByIdentifier(_ identifier: String) -> PumpManagerUI.Type? {
         for bundle in pluginBundles {
             if let name = bundle.object(forInfoDictionaryKey: LoopPluginBundleKey.pumpManagerIdentifier.rawValue) as? String,
-               name == identifier
-            {
+               name == identifier {
                 do {
                     try bundle.loadAndReturnError()
 
@@ -72,8 +70,7 @@ class PluginManager {
     func getCGMManagerTypeByIdentifier(_ identifier: String) -> CGMManagerUI.Type? {
         for bundle in pluginBundles {
             if let name = bundle.object(forInfoDictionaryKey: LoopPluginBundleKey.cgmManagerIdentifier.rawValue) as? String,
-               name == identifier
-            {
+               name == identifier {
                 do {
                     try bundle.loadAndReturnError()
 
@@ -111,8 +108,7 @@ class PluginManager {
     func getServiceTypeByIdentifier(_ identifier: String) -> ServiceUI.Type? {
         for bundle in pluginBundles {
             if let name = bundle.object(forInfoDictionaryKey: LoopPluginBundleKey.serviceIdentifier.rawValue) as? String,
-               name == identifier
-            {
+               name == identifier {
                 do {
                     try bundle.loadAndReturnError()
 
@@ -149,8 +145,7 @@ class PluginManager {
     func getStatefulPluginTypeByIdentifier(_ identifier: String) -> StatefulPluggable.Type? {
         for bundle in pluginBundles {
             if let name = bundle.object(forInfoDictionaryKey: LoopPluginBundleKey.statefulPluginIdentifier.rawValue) as? String,
-               name == identifier
-            {
+               name == identifier {
                 do {
                     try bundle.loadAndReturnError()
 
@@ -181,8 +176,7 @@ class PluginManager {
     func getOnboardingTypeByIdentifier(_ identifier: String) -> OnboardingUI.Type? {
         for bundle in pluginBundles {
             if let name = bundle.object(forInfoDictionaryKey: LoopPluginBundleKey.onboardingIdentifier.rawValue) as? String,
-               name == identifier
-            {
+               name == identifier {
                 do {
                     try bundle.loadAndReturnError()
 
@@ -213,8 +207,7 @@ class PluginManager {
     func getSupportUITypeByIdentifier(_ identifier: String) -> SupportUI.Type? {
         for bundle in pluginBundles {
             if let name = bundle.object(forInfoDictionaryKey: LoopPluginBundleKey.supportIdentifier.rawValue) as? String,
-               name == identifier
-            {
+               name == identifier {
                 do {
                     try bundle.loadAndReturnError()
 
@@ -239,25 +232,25 @@ class PluginManager {
 
 extension Bundle {
     var isPumpManagerPlugin: Bool {
-        object(forInfoDictionaryKey: LoopPluginBundleKey.pumpManagerIdentifier.rawValue) as? String != nil }
+        object(forInfoDictionaryKey: LoopPluginBundleKey.pumpManagerIdentifier.rawValue) is String }
 
     var isCGMManagerPlugin: Bool {
-        object(forInfoDictionaryKey: LoopPluginBundleKey.cgmManagerIdentifier.rawValue) as? String != nil }
+        object(forInfoDictionaryKey: LoopPluginBundleKey.cgmManagerIdentifier.rawValue) is String }
 
     var isStatefulPlugin: Bool {
-        object(forInfoDictionaryKey: LoopPluginBundleKey.statefulPluginIdentifier.rawValue) as? String != nil }
+        object(forInfoDictionaryKey: LoopPluginBundleKey.statefulPluginIdentifier.rawValue) is String }
 
-    var isServicePlugin: Bool { object(forInfoDictionaryKey: LoopPluginBundleKey.serviceIdentifier.rawValue) as? String != nil }
+    var isServicePlugin: Bool { object(forInfoDictionaryKey: LoopPluginBundleKey.serviceIdentifier.rawValue) is String }
     var isOnboardingPlugin: Bool {
-        object(forInfoDictionaryKey: LoopPluginBundleKey.onboardingIdentifier.rawValue) as? String != nil }
+        object(forInfoDictionaryKey: LoopPluginBundleKey.onboardingIdentifier.rawValue) is String }
 
-    var isSupportPlugin: Bool { object(forInfoDictionaryKey: LoopPluginBundleKey.supportIdentifier.rawValue) as? String != nil }
+    var isSupportPlugin: Bool { object(forInfoDictionaryKey: LoopPluginBundleKey.supportIdentifier.rawValue) is String }
 
     var isLoopPlugin: Bool {
         isPumpManagerPlugin || isCGMManagerPlugin || isStatefulPlugin || isServicePlugin || isOnboardingPlugin || isSupportPlugin
     }
 
-    var isLoopExtension: Bool { object(forInfoDictionaryKey: LoopPluginBundleKey.extensionIdentifier.rawValue) as? String != nil }
+    var isLoopExtension: Bool { object(forInfoDictionaryKey: LoopPluginBundleKey.extensionIdentifier.rawValue) is String }
 
     var isSimulator: Bool { object(forInfoDictionaryKey: LoopPluginBundleKey.pluginIsSimulator.rawValue) as? Bool == true }
 }

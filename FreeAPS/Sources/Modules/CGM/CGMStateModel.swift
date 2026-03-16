@@ -11,7 +11,7 @@ extension CGM {
 
         @Published var cgmSetupPresented: Bool = false
         @Published var cgmSettingsPresented: Bool = false
-        @Published private(set) var cgmIdentifierToSetUp: String? = nil
+        @Published private(set) var cgmIdentifierToSetUp: String?
 
         @Published var smoothGlucose = false
         @Published var sensorDays: Double = 10

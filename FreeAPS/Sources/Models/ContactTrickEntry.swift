@@ -1,11 +1,10 @@
-
 struct ContactTrickEntry: JSON, Equatable, Hashable {
     var layout: ContactTrickLayout = .single
     var ring1: ContactTrickLargeRing = .none
     var primary: ContactTrickValue = .glucose
     var top: ContactTrickValue = .none
     var bottom: ContactTrickValue = .none
-    var contactId: String? = nil
+    var contactId: String?
     var darkMode: Bool = true
     var ringWidth: Int = 7
     var ringGap: Int = 2

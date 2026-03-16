@@ -51,8 +51,7 @@ extension Settings {
 
             // Read branch information from the branch.txt instead of infoDictionary
             if let branchFileURL = Bundle.main.url(forResource: "branch", withExtension: "txt"),
-               let branchFileContent = try? String(contentsOf: branchFileURL)
-            {
+               let branchFileContent = try? String(contentsOf: branchFileURL) {
                 let lines = branchFileContent.components(separatedBy: .newlines)
                 for line in lines {
                     let components = line.components(separatedBy: "=")

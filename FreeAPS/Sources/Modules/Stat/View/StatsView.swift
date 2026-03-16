@@ -259,8 +259,7 @@ struct StatsView: View {
     }
 
     private func glucoseStats()
-        -> (ifcc: Double, ngsp: Double, average: Double, median: Double, sd: Double, cv: Double, readings: Double)
-    {
+        -> (ifcc: Double, ngsp: Double, average: Double, median: Double, sd: Double, cv: Double, readings: Double) {
         let glucose = fetchRequestReadings
         // First date
         let previous = glucose.last?.date ?? Date()

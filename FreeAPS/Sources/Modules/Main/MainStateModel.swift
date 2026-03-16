@@ -9,7 +9,7 @@ extension Main {
         private(set) var modal: Modal?
         @Published var isModalPresented = false
         @Published var isSecondaryModalPresented = false
-        @Published var secondaryModalView: AnyView? = nil
+        @Published var secondaryModalView: AnyView?
         @Published var lightMode = LightMode.auto
 
         override func subscribe() {
@@ -72,8 +72,7 @@ extension Main {
                         view.buttonTapHandler = { _ in
                             SwiftMessages.hide()
                             // display the pump configuration immediatly
-                            if let pump = self.provider.deviceManager.pumpManager
-                            {
+                            if let pump = self.provider.deviceManager.pumpManager {
                                 let view = PumpConfig.PumpSettingsView(
                                     pumpManager: pump,
                                     deviceManager: self.provider.deviceManager,

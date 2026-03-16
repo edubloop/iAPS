@@ -315,8 +315,7 @@ extension Bolus {
                 }
                 // Unwrap. We can't have NaN values.
                 if let reasons = CoreDataStorage().fetchReason(), let target = reasons.target, let isf = reasons.isf,
-                   let carbRatio = reasons.cr, let minPredBG = reasons.minPredBG
-                {
+                   let carbRatio = reasons.cr, let minPredBG = reasons.minPredBG {
                     self.target = target as Decimal
                     self.isf = isf as Decimal
                     self.carbRatio = carbRatio as Decimal

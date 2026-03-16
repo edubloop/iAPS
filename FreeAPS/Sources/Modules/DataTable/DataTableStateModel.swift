@@ -288,8 +288,7 @@ extension DataTable.StateModel:
     PumpHistoryObserver,
     TempTargetsObserver,
     CarbsObserver,
-    GlucoseObserver
-{
+    GlucoseObserver {
     func settingsDidChange(_: FreeAPSSettings) {
         setupTreatments()
     }

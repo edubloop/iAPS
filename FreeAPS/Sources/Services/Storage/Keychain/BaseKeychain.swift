@@ -91,8 +91,7 @@ final class BaseKeychain: Keychain {
 
             for item in array {
                 if let keyData = item[SecAttrAccount] as? Data,
-                   let key = String(data: keyData, encoding: .utf8)
-                {
+                   let key = String(data: keyData, encoding: .utf8) {
                     keys.update(with: key)
                 }
             }
@@ -130,8 +129,7 @@ final class BaseKeychain: Keychain {
         if status == errSecSuccess {
             if let resultsDictionary = result as? [String: AnyObject],
                let accessibilityAttrValue = resultsDictionary[SecAttrAccessible] as? String,
-               let mappedValue = KeychainItemAccessibility.accessibilityForAttributeValue(accessibilityAttrValue as CFString)
-            {
+               let mappedValue = KeychainItemAccessibility.accessibilityForAttributeValue(accessibilityAttrValue as CFString) {
                 return .success(mappedValue)
             }
         }

@@ -397,8 +397,7 @@ final class BaseAPSManager: APSManager, Injectable {
            settings.closedLoop,
            settingsManager.preferences.unsuspendIfNoTemp,
            let pump = pumpManager,
-           pump.status.pumpStatus.suspended
-        {
+           pump.status.pumpStatus.suspended {
             return pump.resumeDelivery()
                 .flatMap { _ in mainPublisher }
                 .replaceError(with: false)
@@ -948,8 +947,7 @@ final class BaseAPSManager: APSManager, Injectable {
     }
 
     private func glucoseStats(_ fetchedGlucose: [Readings])
-        -> (ifcc: Double, ngsp: Double, average: Double, median: Double, sd: Double, cv: Double, readings: Double)
-    {
+        -> (ifcc: Double, ngsp: Double, average: Double, median: Double, sd: Double, cv: Double, readings: Double) {
         let glucose = fetchedGlucose
         // First date
         let last = glucose.last?.date ?? Date()
@@ -1084,7 +1082,7 @@ final class BaseAPSManager: APSManager, Injectable {
                 algo_ = "Dynamic ISF: Sigmoid"
             } else if preferences.useNewFormula, preferences.enableDynamicCR {
                 algo_ = "Dynamic ISF + CR: Logarithmic"
-            } else if preferences.useNewFormula, !preferences.sigmoid,!preferences.enableDynamicCR {
+            } else if preferences.useNewFormula, !preferences.sigmoid, !preferences.enableDynamicCR {
                 algo_ = "Dynamic ISF: Logarithmic"
             }
 
@@ -1321,8 +1319,7 @@ final class BaseAPSManager: APSManager, Injectable {
     private func versionCheack() {
         if Date.now.hour % 2 == 0 {
             if let last = CoreDataStorage().fetchVNr(),
-               (last.date ?? .distantFuture) < Date.now.addingTimeInterval(-23.hours.timeInterval)
-            {
+               (last.date ?? .distantFuture) < Date.now.addingTimeInterval(-23.hours.timeInterval) {
                 nightscout.fetchVersion()
             }
         }
@@ -1336,8 +1333,7 @@ final class BaseAPSManager: APSManager, Injectable {
     private func branch() -> String {
         var branch = "Unknown"
         if let branchFileURL = Bundle.main.url(forResource: "branch", withExtension: "txt"),
-           let branchFileContent = try? String(contentsOf: branchFileURL)
-        {
+           let branchFileContent = try? String(contentsOf: branchFileURL) {
             let lines = branchFileContent.components(separatedBy: .newlines)
             for line in lines {
                 let components = line.components(separatedBy: "=")

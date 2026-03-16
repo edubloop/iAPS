@@ -52,7 +52,6 @@ class ViewController: UIViewController {
         updateButtonsProgress()
     }
 
-
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         updateMainGroupProgress(delay: 0.5)
@@ -75,16 +74,16 @@ class ViewController: UIViewController {
         sender.isSelected = true
         selectedIndex = newIndex
         
-        UIView.animate(withDuration: 0.2, delay: 0.0, usingSpringWithDamping: 0.9, initialSpringVelocity: 0.0, options: [], animations: { () -> Void in
+        UIView.animate(withDuration: 0.2, delay: 0.0, usingSpringWithDamping: 0.9, initialSpringVelocity: 0.0, options: [], animations: { () in
             self.groupContainerView.transform = CGAffineTransform(translationX: dx, y: 0)
-        }) { (_) -> Void in
+        }) { (_) in
             self.groupContainerView.transform = CGAffineTransform(translationX: -dx, y: 0)
             self.progressGroup.ring1.progress = 0.0
             self.progressGroup.ring2.progress = 0.0
             self.progressGroup.ring3.progress = 0.0
-            UIView.animate(withDuration: 0.3, delay: 0.0, usingSpringWithDamping: 0.9, initialSpringVelocity: 0.0, options: [], animations: { () -> Void in
+            UIView.animate(withDuration: 0.3, delay: 0.0, usingSpringWithDamping: 0.9, initialSpringVelocity: 0.0, options: [], animations: { () in
                 self.groupContainerView.transform = CGAffineTransform.identity
-            }, completion: { (_) -> Void in
+            }, completion: { (_) in
                 self.updateMainGroupProgress()
             })
         }

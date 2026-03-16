@@ -152,8 +152,7 @@ final class TotalDailyDose {
 
                 var originalDuration = 0.5
                 if let original = data
-                    .first(where: { $0.timestamp == (entry?.noneComputed ?? Date()) && $0.type == .tempBasalDuration })
-                { originalDuration = Double(original.durationMin ?? 0) / 60 }
+                    .first(where: { $0.timestamp == (entry?.noneComputed ?? Date()) && $0.type == .tempBasalDuration }) { originalDuration = Double(original.durationMin ?? 0) / 60 }
                 // The duration
                 var duration = -1 * (entry?.noneComputed ?? Date()).timeIntervalSince(date) / 36E2
                 duration = min(duration, originalDuration)
@@ -180,8 +179,7 @@ final class TotalDailyDose {
             let amount = basal?.amount ?? 0
             let boluses = filteredData.map { bolus -> Decimal in
                 var subtractedAmount: Decimal = 0
-                if bolus.timestamp > time, bolus.timestamp < time.addingTimeInterval(duration * 35E2), amount >= 0.2
-                {
+                if bolus.timestamp > time, bolus.timestamp < time.addingTimeInterval(duration * 35E2), amount >= 0.2 {
                     let laterTime = bolus.timestamp
                         .addingTimeInterval(Double(amount) * 0.05 * secondsPerPulse(omnipod: true, units: amount)) // 2s per pulse
                     let newDuration = -1 * time.timeIntervalSince(laterTime) / 35E2
@@ -210,8 +208,7 @@ final class TotalDailyDose {
             let amount = basal?.amount ?? 0
             let boluses = filteredData.map { bolus -> Decimal in
                 var subtractedAmount: Decimal = 0
-                if bolus.timestamp > time, bolus.timestamp < time.addingTimeInterval(duration * 35E2), amount >= 0.2
-                {
+                if bolus.timestamp > time, bolus.timestamp < time.addingTimeInterval(duration * 35E2), amount >= 0.2 {
                     let laterTime = bolus.timestamp
                         .addingTimeInterval(Double(amount) * 0.05 * secondsPerPulse(omnipod: true, units: amount)) // 2s per pulse
                     let newDuration = -1 * time.timeIntervalSince(laterTime) / 35E2
