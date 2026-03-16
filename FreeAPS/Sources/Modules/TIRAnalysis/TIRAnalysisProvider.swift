@@ -348,14 +348,16 @@ extension TIRAnalysis {
             let glucoseCoverage = min(1.0, Double(valid.count) / Double(expectedCount))
 
             let minRecordsPerFullDay = Int(288 * 70 / 100)
-            let calendar = Calendar.current
-            var countsByDay: [Date: Int] = [:]
+            var countsByBin = Array(repeating: 0, count: max(windowDays, 1))
             for reading in valid {
-                let day = calendar.startOfDay(for: reading.dateString)
-                countsByDay[day, default: 0] += 1
+                let secondsSinceStart = reading.dateString.timeIntervalSince(windowStart)
+                guard secondsSinceStart >= 0 else { continue }
+                let index = Int(secondsSinceStart / Config.secondsPerDay)
+                guard index >= 0, index < countsByBin.count else { continue }
+                countsByBin[index] += 1
             }
 
-            let fullDays = min(windowDays, countsByDay.values.filter { $0 >= minRecordsPerFullDay }.count)
+            let fullDays = countsByBin.filter { $0 >= minRecordsPerFullDay }.count
             let daysLeft = max(0, windowDays - fullDays)
             let isSufficient = daysLeft == 0
             let message: String? = isSufficient
