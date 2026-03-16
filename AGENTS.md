@@ -1,5 +1,5 @@
 # AGENTS
-<!-- workspace-kit: v1.1.0 | synced: 2026-03-16 -->
+<!-- workspace-kit: v1.2.0 | synced: 2026-03-16 -->
 
 Purpose: give a fresh coding agent a fast, safe entrypoint to this repository.
 
