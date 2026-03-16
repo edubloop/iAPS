@@ -34,6 +34,8 @@ Then choose task-specific docs from the routing section below.
 - Avoid duplicate endpoint/scheme strings across modules.
 - Keep feature docs and code in sync when touching architecture, constants, or behavior.
 - Network requests in `NightscoutAPI` must use the private `makeRequest(baseURL:path:queryItems:method:constrainedNetwork:addSecret:)` builder. Do not use raw `URLComponents` + `URLRequest` construction inline in endpoint methods.
+- Treat `edubloop/iAPS` as a clean upstream mirror: keep `main` aligned to `upstream/main` and avoid custom feature commits on `main`.
+- Do custom/integration work on `dev-ci-hardening` (in `edubloop/iAPS_dev`) unless the user explicitly requests a different branch/repo target.
 
 ## Do not do without explicit user approval
 
@@ -45,6 +47,7 @@ Then choose task-specific docs from the routing section below.
 - Change CI/release workflows, signing settings, bundle identifiers, app groups, or fastlane lanes.
 - Introduce new telemetry/upload destinations or new persistence locations for sensitive data.
 - Run destructive git/history operations (`reset --hard`, force push, history rewrite).
+- Push to `upstream` remote or open PRs against `Artificial-Pancreas/iAPS`.
 
 ## Ask-first triggers
 

@@ -13,6 +13,13 @@ Use this file to keep short, date-stamped decisions that affect future agent ses
 
 ## Seed entries
 
+- Date: 2026-03-16
+- Area: Branch governance and PR target policy
+- Decision: Locked agent policy to keep `edubloop/iAPS` as a clean mirror of `Artificial-Pancreas/iAPS` on `main`, run custom/integration work on `dev-ci-hardening` (in `edubloop/iAPS_dev`), and never push/open PRs to `Artificial-Pancreas/iAPS` unless explicitly requested by the owner.
+- Why: Prevent accidental upstream/public contributions and keep stable fork history auditable while preserving a dedicated experimental delivery lane.
+- Code refs: `AGENTS.md`, `.context/01-Quickstart-For-Agents.md`, `.context/80-Branch-Release-CI-Policy.md`, `.context/ReleasePlaybook.md`
+- Doc refs updated: `AGENTS.md`, `.context/01-Quickstart-For-Agents.md`, `.context/80-Branch-Release-CI-Policy.md`, `.context/ReleasePlaybook.md`
+
 - Date: 2026-03-05
 - Area: Agent onboarding docs
 - Decision: Added root `AGENTS.md` and numbered `.context` guide set

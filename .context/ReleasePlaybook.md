@@ -15,6 +15,9 @@ This playbook defines a stable release path for current users and an isolated de
 - Never release to stable before dev is green.
 - Flow is always: `upstream/main` -> `iAPS_dev` validation -> `iAPS` stable release.
 - Keep `<fork-owner>/iAPS` as close to upstream as possible.
+- Keep `<fork-owner>/iAPS` `main` as a clean upstream mirror (no custom feature commits).
+- Do custom/integration changes on `dev-ci-hardening` in `<fork-owner>/iAPS_dev`.
+- Do not open PRs against `Artificial-Pancreas/iAPS` unless explicitly requested by the owner.
 
 ## 3. Stable Release Procedure (`<fork-owner>/iAPS`)
 
@@ -71,6 +74,7 @@ Required dev variable:
 1. `5. Sync Upstream` runs on `iAPS_dev` (syncs `upstream/main` → `iAPS_dev/main`).
 2. Run dev pipeline (`4. Build iAPS`) and smoke test the TestFlight build.
 3. If dev is green, manually sync the same commit to `<fork-owner>/iAPS` stable.
+4. Keep PR and push targets inside owner-controlled forks by default (never upstream/public).
 
 ## 7. CI Troubleshooting Quick Checks
 

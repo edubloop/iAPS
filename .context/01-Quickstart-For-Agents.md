@@ -7,6 +7,12 @@
 3. Open the task-specific context doc for your area.
 4. Inspect current git state before edits (`git status --short --branch`).
 
+## Git target guardrail (before any push/PR)
+
+- Confirm `upstream` points to `Artificial-Pancreas/iAPS` (read-only sync source).
+- Confirm feature/integration work is on `dev-ci-hardening`, not `main`.
+- Never push to `upstream` and never open PRs against `Artificial-Pancreas/iAPS` unless explicitly requested by the owner.
+
 ## Repo orientation
 
 - Core app: `FreeAPS/Sources/`
