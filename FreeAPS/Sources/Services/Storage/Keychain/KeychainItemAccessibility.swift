@@ -45,8 +45,8 @@ public enum KeychainItemAccessibility {
     case whenUnlockedThisDeviceOnly
 
     static func accessibilityForAttributeValue(_ keychainAttrValue: CFString) -> KeychainItemAccessibility? {
-        let firstResult = keychainItemAccessibilityLookup.enumerated().first { $0.element.value == keychainAttrValue }
-        return firstResult?.element.key
+        let firstResult = keychainItemAccessibilityLookup.first { $0.value == keychainAttrValue }
+        return firstResult?.key
     }
 }
 

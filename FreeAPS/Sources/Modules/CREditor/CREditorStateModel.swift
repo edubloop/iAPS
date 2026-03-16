@@ -38,7 +38,7 @@ extension CREditor {
         }
 
         func save() {
-            let schedule = items.enumerated().map { _, item -> CarbRatioEntry in
+            let schedule = items.map { item -> CarbRatioEntry in
                 let fotmatter = DateFormatter()
                 fotmatter.timeZone = TimeZone(secondsFromGMT: 0)
                 fotmatter.dateFormat = "HH:mm:ss"

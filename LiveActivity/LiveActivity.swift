@@ -495,7 +495,7 @@ struct SampleData {
                 values.append(currentValue)
             }
 
-            let dates = values.enumerated().map { index, _ in
+            let dates = values.indices.map { index in
                 lastDate.addingTimeInterval(TimeInterval((index + 1) * 5 * 60))
             }
 
