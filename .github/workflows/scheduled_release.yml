@@ -1,0 +1,50 @@
+name: Scheduled iAPS Release
+
+on:
+  schedule:
+    - cron: '0 3 1 * *'   # 1st of every month at 3am UTC — refreshes build before 90-day TestFlight expiry
+  workflow_dispatch:        # manual trigger for testing or on-demand release
+
+jobs:
+  check_upstream_drift:
+    name: Check upstream workflow drift
+    runs-on: ubuntu-latest
+    outputs:
+      drifted: ${{ steps.diff.outputs.drifted }}
+    steps:
+      - name: Compare build_iAPS.yml SHA with upstream
+        id: diff
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          FORK_SHA=$(gh api "repos/${{ github.repository }}/contents/.github/workflows/build_iAPS.yml" --jq '.sha')
+          UPSTREAM_SHA=$(gh api "repos/Artificial-Pancreas/iAPS/contents/.github/workflows/build_iAPS.yml" --jq '.sha' 2>/dev/null || echo "unavailable")
+
+          echo "Fork SHA:     $FORK_SHA"
+          echo "Upstream SHA: $UPSTREAM_SHA"
+
+          if [ "$UPSTREAM_SHA" = "unavailable" ]; then
+            echo "::warning::Could not fetch upstream build_iAPS.yml — skipping drift check."
+            echo "drifted=false" >> $GITHUB_OUTPUT
+          elif [ "$FORK_SHA" != "$UPSTREAM_SHA" ]; then
+            echo "::warning::⚠️ build_iAPS.yml has drifted from upstream (Artificial-Pancreas/iAPS). The daily sync may have a merge conflict on this file. Review before relying on this build."
+            echo "drifted=true" >> $GITHUB_OUTPUT
+          else
+            echo "::notice::✅ build_iAPS.yml is in sync with upstream."
+            echo "drifted=false" >> $GITHUB_OUTPUT
+          fi
+
+  trigger_build:
+    name: Trigger build
+    needs: check_upstream_drift
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger build_iAPS workflow on main
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          gh workflow run build_iAPS.yml \
+            --repo ${{ github.repository }} \
+            --ref main
+
+          echo "::notice::🚀 build_iAPS.yml triggered on main. Monitor: https://github.com/${{ github.repository }}/actions/workflows/build_iAPS.yml"
