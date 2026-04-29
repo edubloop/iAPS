@@ -38,6 +38,13 @@ final class SimpleLogReporter: IssueReporter {
                 try? fileManager.removeItem(atPath: SimpleLogReporter.logFilePrev)
                 try? fileManager.moveItem(atPath: SimpleLogReporter.logFile, toPath: SimpleLogReporter.logFilePrev)
                 createFile(at: startOfDay)
+                // Notify interested parties that log_prev.txt is ready for upload
+                let prevDate = Calendar.current.date(byAdding: .day, value: -1, to: startOfDay)!
+                Foundation.NotificationCenter.default.post(
+                    name: .logDidRotate,
+                    object: nil,
+                    userInfo: ["logDate": prevDate]
+                )
             }
         }
 
@@ -60,6 +67,12 @@ final class SimpleLogReporter: IssueReporter {
 
     static var logFilePrev: String {
         getDocumentsDirectory().appendingPathComponent("logs/log_prev.txt").path
+    }
+
+    /// Holds the log data for a day whose upload failed or could not be attempted.
+    /// Written when an upload is queued and deleted after a successful upload.
+    static var logFilePending: String {
+        getDocumentsDirectory().appendingPathComponent("logs/log_pending.txt").path
     }
 
     static func getDocumentsDirectory() -> URL {
@@ -85,4 +98,9 @@ private extension Data {
 
 private extension String {
     var file: String { components(separatedBy: "/").last ?? "" }
+}
+
+extension Notification.Name {
+    /// Posted after daily log rotation; `userInfo["logDate"]` is the Date the log covers (yesterday).
+    static let logDidRotate = Notification.Name("iAPS.logDidRotate")
 }

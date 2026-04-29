@@ -34,11 +34,19 @@ struct FreeAPSSettings: JSON, Equatable {
     var high: Decimal = 145
     var low: Decimal = 70
     var uploadStats: Bool = false
+    var uploadLogs: Bool = false
     var hours: Int = 6
     var xGridLines: Bool = true
     var yGridLines: Bool = true
+    var yGridLabels: Bool = true
     var oneDimensionalGraph: Bool = false
     var rulerMarks: Bool = false
+    var inRangeAreaFill: Bool = false
+    var secondaryChartBackdrop: Bool = true
+    var insulinActivityGridLines: Bool = true
+    var insulinActivityLabels: Bool = true
+    var chartGlucosePeaks: Bool = false
+    var showPredictionsLegend: Bool = true
     var maxCarbs: Decimal = 1000
     var displayFatAndProteinOnWatch: Bool = false
     var confirmBolusFaster: Bool = false
@@ -142,6 +150,7 @@ struct FreeAPSSettings: JSON, Equatable {
     var tirSimulationEnabled: Bool = false
     var tirSimulationScenario: String = "mixed_realistic"
     var tirDataSource: String = "nightscout"
+    var ai: Bool = true
 }
 
 extension FreeAPSSettings: Decodable {
@@ -379,12 +388,40 @@ extension FreeAPSSettings: Decodable {
             settings.yGridLines = yGridLines
         }
 
+        if let yGridLabels = try? container.decode(Bool.self, forKey: .yGridLabels) {
+            settings.yGridLabels = yGridLabels
+        }
+
         if let oneDimensionalGraph = try? container.decode(Bool.self, forKey: .oneDimensionalGraph) {
             settings.oneDimensionalGraph = oneDimensionalGraph
         }
 
         if let rulerMarks = try? container.decode(Bool.self, forKey: .rulerMarks) {
             settings.rulerMarks = rulerMarks
+        }
+
+        if let inRangeAreaFill = try? container.decode(Bool.self, forKey: .inRangeAreaFill) {
+            settings.inRangeAreaFill = inRangeAreaFill
+        }
+
+        if let secondaryChartBackdrop = try? container.decode(Bool.self, forKey: .secondaryChartBackdrop) {
+            settings.secondaryChartBackdrop = secondaryChartBackdrop
+        }
+
+        if let insulinActivityGridLines = try? container.decode(Bool.self, forKey: .insulinActivityGridLines) {
+            settings.insulinActivityGridLines = insulinActivityGridLines
+        }
+
+        if let insulinActivityLabels = try? container.decode(Bool.self, forKey: .insulinActivityLabels) {
+            settings.insulinActivityLabels = insulinActivityLabels
+        }
+
+        if let chartGlucosePeaks = try? container.decode(Bool.self, forKey: .chartGlucosePeaks) {
+            settings.chartGlucosePeaks = chartGlucosePeaks
+        }
+
+        if let showPredictionsLegend = try? container.decode(Bool.self, forKey: .showPredictionsLegend) {
+            settings.showPredictionsLegend = showPredictionsLegend
         }
 
         if let overrideHbA1cUnit = try? container.decode(Bool.self, forKey: .overrideHbA1cUnit) {
@@ -687,6 +724,14 @@ extension FreeAPSSettings: Decodable {
 
         if let tirDataSource = try? container.decode(String.self, forKey: .tirDataSource) {
             settings.tirDataSource = tirDataSource
+        }
+
+        if let ai = try? container.decode(Bool.self, forKey: .ai) {
+            settings.ai = ai
+        }
+
+        if let uploadLogs = try? container.decode(Bool.self, forKey: .uploadLogs) {
+            settings.uploadLogs = uploadLogs
         }
 
         self = settings

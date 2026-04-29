@@ -50,11 +50,28 @@ jobs:
     if: needs.auto_build_check.outputs.AUTO_BUILD_ENABLED == 'true' || github.event_name == 'workflow_dispatch'
     uses: ./.github/workflows/create_certs.yml
     secrets: inherit
-  
+
+  check_latest_from_upstream:
+    needs: [check_certs]
+    runs-on: ubuntu-latest
+    name: Check upstream
+    outputs:
+      NEW_COMMITS: ${{ steps.sync.outputs.has_new_commits }}
+
+    steps:
+    - name: Checkout target repo
+      if: |
+        needs.check_alive_and_permissions.outputs.WORKFLOW_PERMISSION == 'true' &&
+        (vars.SCHEDULED_BUILD != 'false' || vars.SCHEDULED_SYNC != 'false')
+      uses: actions/checkout@v5
+      with:
+        token: ${{ secrets.GH_PAT }}
+        ref: alive
+
   # Builds iAPS
   build:
     name: Build
-    needs: [check_certs]
+    needs: [check_certs, check_latest_from_upstream]
     runs-on: macos-latest
     permissions:
       contents: write
@@ -74,7 +91,7 @@ jobs:
       - name: Checkout Repo for syncing
         if: |
           vars.SCHEDULED_SYNC == 'true'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           token: ${{ secrets.GH_PAT }}
           ref: ${{ env.TARGET_BRANCH }} 
@@ -109,7 +126,7 @@ jobs:
           echo ${{ steps.sync.outputs.has_new_commits }}
 
       - name: Checkout Repo for building
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           token: ${{ secrets.GH_PAT }}
           submodules: recursive
@@ -155,7 +172,7 @@ jobs:
       # Upload Build artifacts
       - name: Upload build log, IPA and Symbol artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: build-artifacts-${{ github.run_number }}
           retention-days: 14
