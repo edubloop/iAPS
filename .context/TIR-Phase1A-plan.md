@@ -10,7 +10,7 @@
 |-------|-------------|--------|
 | **0** | Data contract (`.context/TIR-Phase1A-Track0.md`) | ✅ Complete |
 | **0** | Fixture JSON (`.context/fixtures/tir/phase1a-model-examples.json`) | ✅ Complete |
-| **0** | Coverage validator (`BuildTools/tir_coverage_report.py`) | ✅ Complete |
+| **0** | Historical offline modeling dataset and coverage pass (deprecated path) | ✅ Complete |
 | **1** | `TIRModels.swift` — all engine data types | ✅ Complete |
 | **1** | `ThresholdCrossingDetector.swift` — segment detection | ✅ Complete |
 | **1** | `EventClassifier.swift` — 6-category priority classifier | ✅ Complete |
@@ -55,7 +55,14 @@ To avoid ambiguity between docs, data sources are split by execution context:
 - **Offline validation and development analysis (what we run outside app):**
   - Tidepool export (`TidepoolExport.json`) for long-range glucose + basal + bolus
   - Apple Health export (`apple_health_export/export.xml`) for long-range glucose + carbs
-  - Local iAPS records (`monitor/`, `settings/`, `preferences.json`, `logs/`) for recent context
+  - Local data exports (`monitor/`, `settings/`, `preferences.json`, `logs/`) for recent context
+
+Historical note:
+
+- Early Phase 1A modeling used a local external data directory to shape coverage assumptions.
+- That directory path and workflow are now deprecated and are no longer required by the current Phase 1A implementation.
+- Current validation should rely on canonical contracts, fixtures, and in-repo test coverage.
+- `BuildTools/tir_coverage_report.py` was retired from this branch on 2026-03-24 after initial modeling support was completed.
 
 This keeps runtime behavior deterministic and privacy-safe while allowing richer validation during development.
 

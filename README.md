@@ -10,15 +10,17 @@ Ready to explore iAPS? Here's how you can download and build the repository:
 
 ### Download the Repo
 
-  * **Using Terminal:**
+* **Using Terminal:**
 
     clone and open workspace project in Xcode
+
     ```bash
     git clone --recurse-submodules --branch=main https://github.com/artificial-pancreas/iaps.git && cd iaps && xed .
     ```
-### Update the the iaps project in your local clone 
 
-  * **Using Terminal:**
+### Update the the iaps project in your local clone
+
+* **Using Terminal:**
 
     ```
     git pull
@@ -26,7 +28,7 @@ Ready to explore iAPS? Here's how you can download and build the repository:
 
 ### Update the iaps submodules
 
-  * **Using Terminal:**
+* **Using Terminal:**
 
     ```
     git submodule update --init --recursive
@@ -36,8 +38,8 @@ Ready to explore iAPS? Here's how you can download and build the repository:
 
 For instructions on how to build iAPS directly within GitHub, refer to these resources:
 
-  * **iAPS-Specific Instructions:** [https://github.com/Artificial-Pancreas/iAPS/blob/main/fastlane/testflight.md](https://github.com/Artificial-Pancreas/iAPS/blob/main/fastlane/testflight.md)
-  * **General GitHub Actions Overview:** [https://loopkit.github.io/loopdocs/gh-actions/gh-overview/](https://loopkit.github.io/loopdocs/gh-actions/gh-overview/)
+* **iAPS-Specific Instructions:** [https://github.com/Artificial-Pancreas/iAPS/blob/main/fastlane/testflight.md](https://github.com/Artificial-Pancreas/iAPS/blob/main/fastlane/testflight.md)
+* **General GitHub Actions Overview:** [https://loopkit.github.io/loopdocs/gh-actions/gh-overview/](https://loopkit.github.io/loopdocs/gh-actions/gh-overview/)
 
 -----
 
@@ -45,8 +47,8 @@ For instructions on how to build iAPS directly within GitHub, refer to these res
 
 Please understand that iAPS is:
 
-  * **Highly experimental and rapidly evolving.**
-  * **Not CE or FDA approved for therapy.**
+* **Highly experimental and rapidly evolving.**
+* **Not CE or FDA approved for therapy.**
 
 The Near Field Communication (NFC) capability requires a paid Apple developer membership, however if using Dexcom sensors with iAPS you don't need the NFC capability enabled in Xcode capability settings.
 Distributing and building TestFlight apps also requires a paid membership.
@@ -57,33 +59,33 @@ Distributing and building TestFlight apps also requires a paid membership.
 
 ### Insulin Pumps
 
-  * **Omnipod EROS**
-  * **Omnipod DASH**
-  * **Medtrum TouchCare Nano**
-  * **Dana:**
-      * Dana-I
-      * DanaRS (firmware 3 only)
-  * **Medtronic:**
-      * 515 or 715 (any firmware)
-      * 522 or 722 (any firmware)
-      * 523 or 723 (firmware 2.4 or lower)
-      * Worldwide Veo 554 or 754 (firmware 2.6A or lower)
-      * Canadian/Australian Veo 554 or 754 (firmware 2.7A or lower)
+* **Omnipod EROS**
+* **Omnipod DASH**
+* **Medtrum TouchCare Nano**
+* **Dana:**
+  * Dana-I
+  * DanaRS (firmware 3 only)
+* **Medtronic:**
+  * 515 or 715 (any firmware)
+  * 522 or 722 (any firmware)
+  * 523 or 723 (firmware 2.4 or lower)
+  * Worldwide Veo 554 or 754 (firmware 2.6A or lower)
+  * Canadian/Australian Veo 554 or 754 (firmware 2.7A or lower)
 
 ### CGM Sensors
 
-  * **Dexcom:**
-      * G5
-      * G6
-      * ONE
-      * ONE +
-      * G7
-  * **Libre:**
-      * 1
-      * 2 (European)
-      * 2 Plus (European)
-  * **Medtronic Enlite**
-  * **Nightscout** (as CGM)
+* **Dexcom:**
+  * G5
+  * G6
+  * ONE
+  * ONE +
+  * G7
+* **Libre:**
+  * 1
+  * 2 (European)
+  * 2 Plus (European)
+* **Medtronic Enlite**
+* **Nightscout** (as CGM)
 
 ### iPhone and iPod Compatibility
 
@@ -95,15 +97,15 @@ The iAPS app runs on your **iPhone** or **iPod**. An **iPhone 8 or newer** is re
 
 Connect with the iAPS community and find helpful resources here:
 
-  * **Discord iAPS Server:** [https://discord.com/invite/ptkk2Y264Z](https://discord.com/invite/ptkk2Y264Z)
-  * **Facebook Group:** [https://www.facebook.com/groups/403549385863967](https://www.facebook.com/groups/403549385863967)
-  * **iAPS Statistics:** [https://open-iaps.org](https://open-iaps.org)
-  * **iAPS Documentation (under development):** [https://iaps.readthedocs.io/en/latest/](https://iaps.readthedocs.io/en/latest/)
-  * **OpenAPS Documentation:** [https://openaps.readthedocs.io/en/latest/](https://openaps.readthedocs.io/en/latest/)
-  * **Crowdin Project for iAPS Translation:** [https://crowdin.com/project/iaps](https://crowdin.com/project/iaps)
+* **Discord iAPS Server:** [https://discord.com/invite/ptkk2Y264Z](https://discord.com/invite/ptkk2Y264Z)
+* **Facebook Group:** [https://www.facebook.com/groups/403549385863967](https://www.facebook.com/groups/403549385863967)
+* **iAPS Statistics:** [https://open-iaps.org](https://open-iaps.org)
+* **iAPS Documentation (under development):** [https://iaps.readthedocs.io/en/latest/](https://iaps.readthedocs.io/en/latest/)
+* **OpenAPS Documentation:** [https://openaps.readthedocs.io/en/latest/](https://openaps.readthedocs.io/en/latest/)
+* **Crowdin Project for iAPS Translation:** [https://crowdin.com/project/iaps](https://crowdin.com/project/iaps)
     [](https://crowdin.com/project/iaps) [![Crowdin](https://badges.crowdin.net/iaps/localized.svg)](https://crowdin.com/project/iaps)
-  * **Middleware code for iAPS:** [https://github.com/Jon-b-m/middleware](https://github.com/Jon-b-m/middleware)
-  * **Omnipod DASH Pump and Settings:** [https://loopkit.github.io/loopdocs/loop-3/omnipod/](https://loopkit.github.io/loopdocs/loop-3/omnipod/)
+* **Middleware code for iAPS:** [https://github.com/Jon-b-m/middleware](https://github.com/Jon-b-m/middleware)
+* **Omnipod DASH Pump and Settings:** [https://loopkit.github.io/loopdocs/loop-3/omnipod/](https://loopkit.github.io/loopdocs/loop-3/omnipod/)
 
 -----
 
@@ -111,6 +113,6 @@ Connect with the iAPS community and find helpful resources here:
 
 We welcome your contributions to improve iAPS\!
 
-  * **Code contributions** via Pull Requests are highly encouraged.
-  * **Translators** can join our Crowdin project by clicking the link above.
-  * For **questions or other contributions**, please email jon.m@live.se.
+* **Code contributions** via Pull Requests are highly encouraged.
+* **Translators** can join our Crowdin project by clicking the link above.
+* For **questions or other contributions**, please email <jon.m@live.se>.

@@ -6,7 +6,6 @@
 [![Version](https://img.shields.io/cocoapods/v/MKRingProgressView.svg?style=flat)](http://cocoapods.org/pods/MKRingProgressView)
 [![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
 
-
 Ring progress view similar to Activity app on Apple Watch
 
 <img src="MKRingProgressView.png" alt="MKRingProgressView" width=375>
@@ -41,6 +40,7 @@ github "maxkonovalov/MKRingProgressView"
 ## Usage
 
 See the example Xcode project. It contains 2 targets:
+
 - **ProgressRingExample** - a simple example containing a single progress ring with adjustable parameters.
 - **ActivityRingsExample** - an advanced usage example replicating Activity app by Apple. It also contains additional classes for convenient grouping of 3 ring progress views together.
 
@@ -59,7 +59,7 @@ ringProgressView.progress = 0.0
 view.addSubview(ringProgressView)
 ```
 
-The `progress` value can be animated the same way you would normally animate any property using `UIView`'s block-based animations: 
+The `progress` value can be animated the same way you would normally animate any property using `UIView`'s block-based animations:
 
 ```swift
 UIView.animate(withDuration: 0.5) {

@@ -107,7 +107,7 @@ final class BaseDeviceDataManager: Injectable, DeviceDataManager {
 
     @Injected() private var displayGlucosePreference: DisplayGlucosePreference!
 
-    @Persisted(key: "BaseDeviceDataManager.lastEventDate") var lastEventDate: Date?
+    @Persisted(key: "BaseDeviceDataManager.lastEventDate") var lastEventDate: Date? = nil
 
     let bolusTrigger = PassthroughSubject<Bool, Never>()
     let errorSubject = PassthroughSubject<Error, Never>()

@@ -6,7 +6,7 @@ private let contextLock = NSRecursiveLock()
 final class JavaScriptWorker {
     private let processQueue = DispatchQueue(label: "DispatchQueue.JavaScriptWorker")
     private let virtualMachine: JSVirtualMachine
-    @SyncAccess(lock: contextLock) private var commonContext: JSContext?
+    @SyncAccess(lock: contextLock) private var commonContext: JSContext? = nil
 
     init() {
         virtualMachine = processQueue.sync { JSVirtualMachine()! }

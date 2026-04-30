@@ -105,21 +105,19 @@ Primary source preference by metric:
 3. Carbs: Apple Health `DietaryCarbohydrates` -> iAPS local `monitor/carbhistory.json` / `upload/uploaded-carbs.json`
 4. Settings context: iAPS `settings/*.json` + `preferences.json`
 
-## 5) Coverage Validator
+## 5) Historical Modeling Note (Deprecated)
 
-Use `BuildTools/tir_coverage_report.py` to produce:
+During early Phase 1A prototyping, an external local data directory was used to model coverage assumptions and sanity-check source completeness.
 
-- source-level coverage summaries (counts + date ranges)
-- window coverage (`7/14/30/90` days by default)
-- carb availability caveats per window
+That directory-based workflow is now deprecated for Phase 1A documentation and should not be treated as an active dependency.
 
-Example:
+The standalone modeling helper script used during that phase (`BuildTools/tir_coverage_report.py`) has been retired from this branch.
 
-```bash
-python3 BuildTools/tir_coverage_report.py \
-  --data-dir "/Users/ec/Documents/OC/iaps records" \
-  --windows 7 14 30 90
-```
+Current source of truth for Phase 1A validation:
+
+- data-contract definitions in this document
+- fixture examples in `.context/fixtures/tir/phase1a-model-examples.json`
+- in-repo engine tests under `FreeAPSTests/TIRAnalysis/` and `BuildTools/TIREngineTests/`
 
 ## 6) Fixture
 

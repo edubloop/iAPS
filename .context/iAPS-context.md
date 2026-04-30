@@ -361,7 +361,7 @@ Based on the interviewed user profile (8-year veteran, full-stack developer, sha
 4. Safety is non-negotiable but shouldn't be noisy: Guard rails must exist but shouldn't create alarm fatigue. Distinguish between "informational" (sensor warmup) and "actionable" (genuine low predicted) notifications.
 5. Settings should have dependency maps: When a user changes AF, the app should show what other parameters are affected and in what direction. No setting should feel like it exists in isolation.
 13. iAPS Advanced Settings Reference
-Source: iAPS documentation (bcdiabetes.github.io/freeapsdocs + iaps.readthedocs.io via GitHub source) This section maps every Advanced Settings group, its key parameters, formulas, cross-effects, and defaults.
+Intake: iAPS documentation (bcdiabetes.github.io/freeapsdocs + iaps.readthedocs.io via GitHub source) This section maps every Advanced Settings group, its key parameters, formulas, cross-effects, and defaults.
 13.1 Autosens, Dynamic ISF/ICR & Adjust Basal (Concepts)
 Autosens reviews the last 8 hours and 24 hours of data every loop cycle (5 min). It calculates an `autosens.ratio` representing how sensitive/resistant the user is compared to their profile, then makes conservative temporary adjustments to basal rates, BG target, and ISF. It always picks the more conservative of the 8hr vs 24hr calculation (to avoid over-dosing). Autosens does NOT adjust ICR.
 If Autotune is enabled, autosens uses Autotune-calculated ICR/ISF/basal as its baseline instead of profile values.

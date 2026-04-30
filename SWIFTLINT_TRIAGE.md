@@ -73,6 +73,7 @@
 ## Preventing Backsliding
 
 The CI lint workflow (`.github/workflows/lint.yml`) should:
+
 1. Run `swiftlint lint --reporter json` and count warnings
 2. Compare against the baseline stored in `SWIFTLINT_TRIAGE.md` or a `.swiftlint-baseline` file
 3. **Fail if warning count increases** (new violations block merge)

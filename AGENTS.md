@@ -1,5 +1,5 @@
 # AGENTS
-<!-- workspace-kit: v1.2.0 | synced: 2026-03-16 -->
+<!-- workspace-kit-sync: v1.4.0 | synced: 2026-03-31 -->
 
 Purpose: give a fresh coding agent a fast, safe entrypoint to this repository.
 
@@ -11,6 +11,16 @@ Purpose: give a fresh coding agent a fast, safe entrypoint to this repository.
 4. `.context/90-Domain-Glossary-And-Safety-Guardrails.md`
 
 Then choose task-specific docs from the routing section below.
+
+## Workspace session-start check
+
+From `iAPS/`, run:
+
+```sh
+bash ../.workspace-notes/cadence_due_check.sh
+```
+
+If output is `[DUE]`, run `bash ../.workspace-notes/harness_healthcheck.sh` and append a row in `../WORKSPACE_AUDIT.md` under `Cadence Log`.
 
 ## Safety and scope
 
@@ -62,6 +72,17 @@ Then choose task-specific docs from the routing section below.
 - If changing algorithms or thresholds, run related unit tests and summarize behavioral impact.
 - If adding/changing constants, confirm whether centralized or intentionally local.
 
+## Delivery Artifacts
+
+For non-trivial feature work, use the structured delivery chain:
+
+1. `/spec` — `artifacts/tickets/{ID}/spec.md` (labeled requirements)
+2. `/plan` — `artifacts/tickets/{ID}/plan.md` (traceable implementation steps)
+3. `/implement` — execute plan steps with validation
+4. `/pr-review` — `artifacts/tickets/{ID}/review.md` (intent-aligned review)
+
+Artifacts live at workspace level (`../artifacts/`). See `.workspace-kit/docs/delivery-chain.md`.
+
 ## Source-of-truth anchors
 
 - Core app code: `FreeAPS/Sources/`
@@ -69,3 +90,4 @@ Then choose task-specific docs from the routing section below.
 - OpenAPS paths/constants: `FreeAPS/Sources/APS/OpenAPS/Constants.swift`
 - Network layer: `FreeAPS/Sources/Services/Network/`
 - Existing domain docs: `.context/iAPS-context.md`, `.context/iAPS-TIR-decomposition-engine.md`
+- Standards catalog: `SWIFT_CODING_STANDARDS.md`

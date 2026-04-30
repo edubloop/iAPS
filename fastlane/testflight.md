@@ -14,9 +14,8 @@ There are more detailed instructions in LoopDocs for doing Browser Builds of Loo
 
 * A [github account](https://github.com/signup). The free level comes with plenty of storage and free compute time to build iAPS, multiple times a day, if you wanted to.
 * A paid [Apple Developer account](https://developer.apple.com). You may be able to use the free version, but that has not been tested.
-* Some time. Set aside a couple of hours to perform the setup. 
+* Some time. Set aside a couple of hours to perform the setup.
 * Use the same GitHub account for all "Browser Builds" of the various DIY apps.
-
 
 ## Generate App Store Connect API Key
 
@@ -32,11 +31,12 @@ This step is common for all "Browser Builds", and should be done only once. Plea
 ## Setup Github Match-Secrets repository
 
 This is also a common step for all "browser builds", do this step only once
+
 1. Create a [new empty repository](https://github.com/new) titled `Match-Secrets`. It should be private.
 
 ## Setup Github iAPS repository
 
->    [Click here](docs/github.md)
+> [Click here](docs/github.md)
 
 ## Validate repository secrets
 
@@ -44,7 +44,7 @@ This is also a common step for all "browser builds", do this step only once
 1. Select "1. Validate Secrets".
 1. Click "Run Workflow", and tap the green button.
 1. Wait, and within a minute or two you should see a green checkmark indicating the workflow succeeded.
-1. The workflow will check if the required secrets are added and that they are correctly formatted. If errors are detected, please check the run log for details. 
+1. The workflow will check if the required secrets are added and that they are correctly formatted. If errors are detected, please check the run log for details.
 
 ## Add Identifiers for iAPS App
 
@@ -99,7 +99,7 @@ This step is no longer required. The Build function now takes care of this for y
 
 Once a year, you will get an email from Apple indicating your certificate will expire in 30 days. You can ignore that email. When it does expire, the next time an automatic or manual build happens, the expired certificate information will be removed (nuked) from your Match-Secrets repository and a new one created. This should happen without you needing to take any action.
 
-## Build iAPS!
+## Build iAPS
 
 1. Click on the "Actions" tab of your iAPS repository.
 1. Select "4. Build iAPS". _Are you working on a previuos fork of iAPS and not seeing any GitHub workflows in the Actions tab? You may have to change the default branch so that it contains the .github/workflows files, or merge these changes into your default branch (typically `master`)._

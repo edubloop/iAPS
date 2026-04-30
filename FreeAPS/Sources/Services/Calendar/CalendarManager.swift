@@ -13,7 +13,7 @@ protocol CalendarManager {
 final class BaseCalendarManager: CalendarManager, Injectable {
     private lazy var eventStore: EKEventStore = { EKEventStore() }()
 
-    @Persisted(key: "CalendarManager.currentCalendarID") var currentCalendarID: String?
+    @Persisted(key: "CalendarManager.currentCalendarID") var currentCalendarID: String? = nil
     @Injected() private var settingsManager: SettingsManager!
     @Injected() private var broadcaster: Broadcaster!
     @Injected() private var glucoseStorage: GlucoseStorage!

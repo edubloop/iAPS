@@ -21,9 +21,9 @@ To generate a new PAT:
 
 Follow these steps to fork the repository:
 
-1.  **Fork** `https://github.com/Artificial-Pancreas/iAPS` into your GitHub account.
-2.  If you are using an organization, do this step at the organization level, e.g., username-org. If you are not using an organization, do this step at the repository level, e.g., username/iAPS:
-    * Go to Settings -> Secrets and variables -> Actions and make sure the Secrets tab is open. 
+1. **Fork** `https://github.com/Artificial-Pancreas/iAPS` into your GitHub account.
+2. If you are using an organization, do this step at the organization level, e.g., username-org. If you are not using an organization, do this step at the repository level, e.g., username/iAPS:
+    * Go to Settings -> Secrets and variables -> Actions and make sure the Secrets tab is open.
 3. For each of the following secrets, tap on "New organization secret" or "New repository secret", then add the name of the secret, along with the value you recorded for it:
     * `TEAMID`
     * `FASTLANE_KEY_ID`
@@ -33,20 +33,20 @@ Follow these steps to fork the repository:
     * `MATCH_PASSWORD` (Just create a new, strong password for this)
 4. If you are using an organization, do this step at the organization level, e.g., username-org. If you are not using an organization, do this step at the repository level, e.g., username/iAPS:
     * Go to Settings -> Secrets and variables -> Actions and make sure the Variables tab is open
-4. Tap on "Create new organization variable" or "Create new repository variable", then add the name below and enter the value *true*. Unlike secrets these variables are visible and can be edited.
+5. Tap on "Create new organization variable" or "Create new repository variable", then add the name below and enter the value *true*. Unlike secrets these variables are visible and can be edited.
     * `ENABLE_NUKE_CERTS`
-5.  Under the **Variables** tab, set the following two variables:
+6. Under the **Variables** tab, set the following two variables:
     * `APP_IDENTIFIER`: This defaults to `ru.artpancreas.#{TEAMID}.FreeAPS` if you don't set it.
     * `BUILD_GROUP`: This variable is typically left blank unless you're labeling a distribution or build shared by multiple users.
-      
+
 ---
 
 ### Keep Your Fork Up to Date
 
 To synchronize your forked repository with the original iAPS repository:
 
-1.  Go to the **"Actions"** tab in your iAPS repository.
-2.  Select the **"5. Sync Upstream"** workflow.
-3.  Click **"Run Workflow,"** choose the branch you want to maintain, and then tap the green button.
+1. Go to the **"Actions"** tab in your iAPS repository.
+2. Select the **"5. Sync Upstream"** workflow.
+3. Click **"Run Workflow,"** choose the branch you want to maintain, and then tap the green button.
 
 While most users will only need to sync one branch, you can repeat this process for any branch where these workflows are available. This action is currently scheduled to run daily at midnight, but you can trigger it manually anytime.

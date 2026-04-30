@@ -33,4 +33,3 @@
 - Preferences -> Edit settings json. Set "debugOptions": true, and restart the app.
 - In Files application on iPhone.
 - You can also download all the data to your computer through iTunes or Finder.
-
