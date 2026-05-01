@@ -27,7 +27,9 @@ struct LiveActivity: Widget {
     var body: some WidgetConfiguration {
         let config = ActivityConfiguration(for: LiveActivityAttributes.self) { context in
             // Lock screen/banner UI goes here
-            if !context.state.showChart {
+            if #available(iOS 18.0, *) {
+                LiveActivityContentWrapperIOS18(context: context)
+            } else if !context.state.showChart {
                 bannerWithoutChart(for: context)
             } else {
                 bannerWithChart(for: context)
@@ -562,6 +564,136 @@ private struct LiveActivityChartWrapper: View {
 
     var body: some View {
         LiveActivityChart(context: context, isWatch: activityFamily == .small)
+    }
+}
+
+@available(iOS 18.0, *) private struct LiveActivityContentWrapperIOS18: View {
+    @Environment(\.activityFamily) private var activityFamily
+    let context: ActivityViewContext<LiveActivityAttributes>
+
+    var body: some View {
+        if activityFamily == .small {
+            // Watch Smart Stack — always use watch-optimised layout regardless of showChart
+            LiveActivityChart(context: context, isWatch: true)
+        } else if context.state.showChart {
+            LiveActivityChart(context: context, isWatch: false)
+        } else {
+            LiveActivityNoChartBanner(context: context)
+        }
+    }
+}
+
+private struct LiveActivityNoChartBanner: View {
+    let context: ActivityViewContext<LiveActivityAttributes>
+
+    private let dateFormatter: DateFormatter = {
+        var formatter = DateFormatter()
+        formatter.dateStyle = .none
+        formatter.timeStyle = .short
+        return formatter
+    }()
+
+    private var emptyText: some View {
+        Text(" ").font(.caption).offset(x: 0, y: -5)
+    }
+
+    private func updatedLabel() -> Text {
+        Text("\(dateFormatter.string(from: context.state.loopDate))")
+    }
+
+    private func changeLabel() -> some View {
+        Group {
+            if !context.state.change.isEmpty {
+                if !context.isStale {
+                    Text(context.state.change)
+                } else {
+                    Text("old").foregroundStyle(.secondary)
+                }
+            } else {
+                Text("--")
+            }
+        }
+    }
+
+    private func iobView() -> some View {
+        HStack(spacing: 0) {
+            Text(context.state.iob)
+            Text(" U")
+        }
+        .foregroundStyle(.insulin)
+    }
+
+    private func cobView() -> some View {
+        HStack(spacing: 0) {
+            Text(context.state.cob)
+            Text(" g")
+        }
+        .foregroundStyle(.loopYellow)
+    }
+
+    private func loopView(size: CGFloat) -> some View {
+        let timeAgo = abs(context.state.loopDate.timeIntervalSinceNow) / 60
+        let color: Color = timeAgo > 8 ? .loopYellow : timeAgo > 12 ? .loopRed : .loopGreen
+        return LoopActivity(stroke: color, compact: size == 12).frame(width: size)
+    }
+
+    private func bgAndTrend() -> some View {
+        HStack(spacing: 3) {
+            Text(context.state.bg)
+            if let direction = context.state.direction {
+                Text(direction)
+                    .scaleEffect(x: 0.7, y: 0.7, anchor: .center)
+                    .padding(.trailing, -5)
+            }
+        }
+    }
+
+    var body: some View {
+        VStack(spacing: 2) {
+            ZStack {
+                updatedLabel().font(.caption).foregroundStyle(.primary.opacity(0.7))
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+            }
+            HStack {
+                VStack {
+                    loopView(size: 22)
+                    emptyText
+                }.offset(x: 0, y: 2)
+                Spacer()
+                VStack {
+                    bgAndTrend().font(.title)
+                    changeLabel().font(.caption).foregroundStyle(.primary.opacity(0.7)).offset(x: -12, y: -5)
+                }
+                Spacer()
+                VStack {
+                    iobView().font(.title)
+                    emptyText
+                }
+                Spacer()
+                VStack {
+                    cobView().font(.title)
+                    emptyText
+                }
+            }
+            HStack {
+                Spacer()
+                Text(NSLocalizedString("Eventual Glucose", comment: ""))
+                Spacer()
+                Text(context.state.eventual)
+                Text(context.state.mmol ? NSLocalizedString(
+                    "mmol/L",
+                    comment: "The short unit display string for millimoles of glucose per liter"
+                ) : NSLocalizedString(
+                    "mg/dL",
+                    comment: "The short unit display string for milligrams of glucose per decilter"
+                )).foregroundStyle(.secondary)
+            }.padding(.top, 10)
+        }
+        .privacySensitive()
+        .padding(.vertical, 10).padding(.horizontal, 15)
+        .foregroundStyle(Color.primary)
+        .background(BackgroundStyle.background.opacity(0.4))
+        .activityBackgroundTint(Color.clear)
     }
 }
 
